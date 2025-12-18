@@ -1,125 +1,34 @@
-// Progressive MIDI playback using Tone.js with multi-instrument support
+// Progressive MIDI playback using smplr for high-quality instruments
 
-// Instrument definitions with Tone.js synth configurations
-// Base URL for instrument samples
-// Using the excellent collection from nbrosowsky/tonejs-instruments
-const SAMPLE_BASE_URL = "https://raw.githubusercontent.com/nbrosowsky/tonejs-instruments/master/samples/";
+// Instrument configurations mapping instrument IDs to smplr instruments
+const INSTRUMENT_CONFIGS = {
+    0: { type: 'piano', name: 'Splendid Grand Piano', volume: 0.8 },
+    1: { type: 'soundfont', instrument: 'electric_bass_finger', name: 'Electric Bass', volume: 0.9 },
+    2: { type: 'soundfont', instrument: 'string_ensemble_1', name: 'Strings', volume: 0.7 },
+    3: { type: 'soundfont', instrument: 'alto_sax', name: 'Alto Sax', volume: 0.75 },
+    4: { type: 'soundfont', instrument: 'pad_2_warm', name: 'Warm Pad', volume: 0.6 },
+    5: { type: 'soundfont', instrument: 'acoustic_guitar_nylon', name: 'Nylon Guitar', volume: 0.8 },
+    6: { type: 'soundfont', instrument: 'church_organ', name: 'Church Organ', volume: 0.7 },
+    7: { type: 'drums', name: 'Drums', volume: 0.85 }
+};
 
-const INSTRUMENTS = {
-    0: {  // Piano
-        name: 'piano',
-        create: () => new Tone.Sampler({
-            urls: {
-                "A1": "A1.mp3", "A2": "A2.mp3", "A3": "A3.mp3", "A4": "A4.mp3", "A5": "A5.mp3", "A6": "A6.mp3", "A7": "A7.mp3",
-                "C1": "C1.mp3", "C2": "C2.mp3", "C3": "C3.mp3", "C4": "C4.mp3", "C5": "C5.mp3", "C6": "C6.mp3", "C7": "C7.mp3",
-                "D#1": "Ds1.mp3", "D#2": "Ds2.mp3", "D#3": "Ds3.mp3", "D#4": "Ds4.mp3", "D#5": "Ds5.mp3", "D#6": "Ds6.mp3", "D#7": "Ds7.mp3",
-                "F#1": "Fs1.mp3", "F#2": "Fs2.mp3", "F#3": "Fs3.mp3", "F#4": "Fs4.mp3", "F#5": "Fs5.mp3", "F#6": "Fs6.mp3", "F#7": "Fs7.mp3"
-            },
-            release: 1,
-            baseUrl: SAMPLE_BASE_URL + "piano/"
-        }),
-        volume: -5
-    },
-    1: {  // Bass
-        name: 'bass',
-        create: () => new Tone.Sampler({
-            urls: {
-                "A#1": "As1.mp3", "A#2": "As2.mp3", "A#3": "As3.mp3", "A#4": "As4.mp3",
-                "C#1": "Cs1.mp3", "C#2": "Cs2.mp3", "C#3": "Cs3.mp3", "C#4": "Cs4.mp3",
-                "E1": "E1.mp3", "E2": "E2.mp3", "E3": "E3.mp3", "E4": "E4.mp3",
-                "G1": "G1.mp3", "G2": "G2.mp3", "G3": "G3.mp3", "G4": "G4.mp3"
-            },
-            release: 1,
-            baseUrl: SAMPLE_BASE_URL + "bass-electric/"
-        }),
-        volume: -3
-    },
-    2: {  // Strings (Violin)
-        name: 'strings',
-        create: () => new Tone.Sampler({
-            urls: {
-                "A3": "A3.mp3", "A4": "A4.mp3", "A5": "A5.mp3", "A6": "A6.mp3",
-                "C4": "C4.mp3", "C5": "C5.mp3", "C6": "C6.mp3", "C7": "C7.mp3",
-                "E4": "E4.mp3", "E5": "E5.mp3", "E6": "E6.mp3",
-                "G4": "G4.mp3", "G5": "G5.mp3", "G6": "G6.mp3"
-            },
-            release: 1,
-            baseUrl: SAMPLE_BASE_URL + "violin/"
-        }),
-        volume: -6
-    },
-    3: {  // Lead (Saxophone)
-        name: 'lead',
-        create: () => new Tone.Sampler({
-            urls: {
-                "D#5": "Ds5.mp3", "E3": "E3.mp3", "E4": "E4.mp3", "E5": "E5.mp3",
-                "F3": "F3.mp3", "F4": "F4.mp3", "F5": "F5.mp3", "F#3": "Fs3.mp3", "F#4": "Fs4.mp3", "F#5": "Fs5.mp3",
-                "G3": "G3.mp3", "G4": "G4.mp3", "G5": "G5.mp3", "A4": "A4.mp3", "A5": "A5.mp3",
-                "C4": "C4.mp3", "C5": "C5.mp3", "D3": "D3.mp3", "D4": "D4.mp3", "D5": "D5.mp3"
-            },
-            release: 1,
-            baseUrl: SAMPLE_BASE_URL + "saxophone/"
-        }),
-        volume: -5
-    },
-    4: {  // Pad (Harmonium)
-        name: 'pad',
-        create: () => new Tone.Sampler({
-            urls: {
-                "C2": "C2.mp3", "C3": "C3.mp3", "C4": "C4.mp3", "C5": "C5.mp3",
-                "D#2": "Ds2.mp3", "D#3": "Ds3.mp3", "D#4": "Ds4.mp3",
-                "F#2": "Fs2.mp3", "F#3": "Fs3.mp3", "A2": "A2.mp3", "A3": "A3.mp3", "A4": "A4.mp3"
-            },
-            release: 1,
-            baseUrl: SAMPLE_BASE_URL + "harmonium/"
-        }),
-        volume: -8
-    },
-    5: {  // Pluck (Guitar Acoustic)
-        name: 'pluck',
-        create: () => new Tone.Sampler({
-            urls: {
-                "F4": "F4.mp3", "F#2": "Fs2.mp3", "F#3": "Fs3.mp3", "F#4": "Fs4.mp3",
-                "G2": "G2.mp3", "G3": "G3.mp3", "G4": "G4.mp3",
-                "A2": "A2.mp3", "A3": "A3.mp3", "A4": "A4.mp3",
-                "C3": "C3.mp3", "C4": "C4.mp3", "C5": "C5.mp3",
-                "D2": "D2.mp3", "D3": "D3.mp3", "D4": "D4.mp3",
-                "E2": "E2.mp3", "E3": "E3.mp3", "E4": "E4.mp3"
-            },
-            release: 1,
-            baseUrl: SAMPLE_BASE_URL + "guitar-acoustic/"
-        }),
-        volume: -5
-    },
-    6: {  // Organ
-        name: 'organ',
-        create: () => new Tone.Sampler({
-            urls: {
-                "C3": "C3.mp3", "C4": "C4.mp3", "C5": "C5.mp3", "C6": "C6.mp3",
-                "D#1": "Ds1.mp3", "D#2": "Ds2.mp3", "D#3": "Ds3.mp3", "D#4": "Ds4.mp3", "D#5": "Ds5.mp3",
-                "F#1": "Fs1.mp3", "F#2": "Fs2.mp3", "F#3": "Fs3.mp3", "F#4": "Fs4.mp3", "F#5": "Fs5.mp3",
-                "A1": "A1.mp3", "A2": "A2.mp3", "A3": "A3.mp3", "A4": "A4.mp3", "A5": "A5.mp3"
-            },
-            release: 1,
-            baseUrl: SAMPLE_BASE_URL + "organ/"
-        }),
-        volume: -6
-    },
-    7: {  // Drums - Revert to Synth as no good samples found
-        name: 'drums',
-        create: () => new Tone.MembraneSynth({
-            pitchDecay: 0.05,
-            octaves: 4,
-            oscillator: { type: 'sine' },
-            envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.4 }
-        }),
-        volume: -2
-    }
+// Map MIDI drum notes to smplr DrumMachine sample names
+const DRUM_NOTE_MAP = {
+    35: 'kick', 36: 'kick',
+    38: 'snare', 40: 'snare',
+    37: 'snare',  // side stick -> snare
+    39: 'clap',
+    42: 'hihat', 44: 'hihat', 46: 'hihat-open',
+    41: 'tom1', 43: 'tom1', 45: 'tom2', 47: 'tom2', 48: 'tom3', 50: 'tom3',
+    49: 'crash', 57: 'crash',
+    51: 'ride', 59: 'ride', 53: 'ride',
+    56: 'cowbell',
 };
 
 class AudioPlayer {
     constructor() {
-        this.synths = {};  // Map of instrument ID to synth
+        this.context = null;
+        this.instruments = {};
         this.scheduledNotes = new Set();
         this.notes = [];
         this.isPlaying = false;
@@ -132,95 +41,164 @@ class AudioPlayer {
         this.onPlayStateChange = null;
         this.animationId = null;
         this.initialized = false;
+        this.smplrModule = null;
+
+        // Playback state
+        this.playbackStartTime = 0;
+        this.playbackPosition = 0;
+        this.scheduledEvents = [];
+        this.tempo = 120;
     }
 
     async init() {
         if (this.initialized) return;
 
-        // Initialize global reverb
-        if (!this.reverb) {
-            this.reverb = new Tone.Reverb({
-                decay: 2.5,
-                wet: 0.2
-            }).toDestination();
-            await this.reverb.generate();
+        // Dynamic import of smplr
+        if (!this.smplrModule) {
+            this.smplrModule = await import("https://unpkg.com/smplr/dist/index.mjs");
         }
 
-        // Initialize compressor for master mix glue
-        if (!this.compressor) {
-            this.compressor = new Tone.Compressor({
-                threshold: -10,
-                ratio: 4,
-                attack: 0.01,
-                release: 0.2
-            }).connect(this.reverb);
+        const { SplendidGrandPiano, Soundfont, DrumMachine } = this.smplrModule;
+
+        // Create AudioContext
+        this.context = new AudioContext();
+
+        // Create all instruments
+        const loadPromises = [];
+
+        for (const [id, config] of Object.entries(INSTRUMENT_CONFIGS)) {
+            let instrument;
+
+            if (config.type === 'piano') {
+                instrument = new SplendidGrandPiano(this.context, {
+                    decayTime: 0.8,
+                    volume: this.normalizeVolume(config.volume)
+                });
+            } else if (config.type === 'drums') {
+                instrument = new DrumMachine(this.context, {
+                    volume: this.normalizeVolume(config.volume)
+                });
+            } else {
+                instrument = new Soundfont(this.context, {
+                    instrument: config.instrument,
+                    volume: this.normalizeVolume(config.volume)
+                });
+            }
+
+            this.instruments[id] = instrument;
+            loadPromises.push(instrument.load);
         }
 
-        // Create all instrument synths (use numeric keys)
-        for (let id = 0; id <= 7; id++) {
-            const config = INSTRUMENTS[id];
-            const synth = config.create();
-            synth.volume.value = config.volume;
-            // Connect to compressor for mix control, passing through reverb
-            synth.connect(this.compressor);
-            this.synths[id] = synth;
-        }
-
-        await Tone.loaded();
+        // Wait for all instruments to load
+        await Promise.all(loadPromises);
         this.initialized = true;
+        console.log('smplr instruments loaded');
     }
 
-    getSynth(instrumentId) {
-        // Default to piano (0) for unknown instruments
-        const id = (instrumentId in this.synths) ? instrumentId : 0;
-        return this.synths[id];
+    normalizeVolume(vol) {
+        // smplr volume is 0-127
+        return Math.round(vol * 100);
+    }
+
+    getInstrument(instrumentId) {
+        const id = (instrumentId in this.instruments) ? instrumentId : 0;
+        return this.instruments[id];
     }
 
     scheduleNote(note) {
-        // Include instrument in note ID for uniqueness
         const instrumentId = note.i ?? 0;
         const noteId = `${note.t}-${note.n}-${note.d}-${instrumentId}`;
         if (this.scheduledNotes.has(noteId)) return;
         this.scheduledNotes.add(noteId);
         this.notes.push(note);
 
-        const timeInSeconds = note.t / 1000;
-        const durationInSeconds = Math.max(note.d / 1000, 0.05); // Min 50ms
-        const noteName = Tone.Frequency(note.n, 'midi').toNote();
-        const velocity = note.v / 127;
-
-        // Schedule relative to transport
-        Tone.Transport.schedule((time) => {
-            // Look up synth at playback time (after init)
-            const synth = this.getSynth(instrumentId);
-            if (synth) {
-                synth.triggerAttackRelease(noteName, durationInSeconds, time, velocity);
-            }
-            if (this.onNoteStart) {
-                Tone.Draw.schedule(() => this.onNoteStart(note), time);
-            }
-
-            // Schedule note end callback
-            Tone.Transport.schedule((endTime) => {
-                if (this.onNoteEnd) {
-                    Tone.Draw.schedule(() => this.onNoteEnd(note), endTime);
-                }
-            }, time + durationInSeconds);
-        }, timeInSeconds);
+        // If currently playing, schedule this note
+        if (this.isPlaying) {
+            this._scheduleNotePlayback(note);
+        }
 
         // Auto-start playback on first note if autoPlay enabled
         if (this.autoPlay && !this.isPlaying && this.scheduledNotes.size === 1) {
             this.play();
         }
+    }
 
-        this.syncLoopPoints();
+    _scheduleNotePlayback(note) {
+        const instrumentId = note.i ?? 0;
+        const instrument = this.getInstrument(instrumentId);
+        if (!instrument) return;
+
+        const noteTimeMs = note.t;
+        const durationSec = Math.max(note.d / 1000, 0.05);
+        const velocity = note.v;
+
+        // Calculate when this note should play relative to current playback
+        const currentTimeMs = this.getCurrentTime();
+        const delayMs = noteTimeMs - currentTimeMs;
+
+        if (delayMs < -note.d) {
+            // Note already fully passed
+            return;
+        }
+
+        const scheduleTime = Math.max(0, delayMs);
+        const contextTime = this.context.currentTime + (scheduleTime / 1000);
+
+        // Handle drums: map MIDI note to sample name
+        if (instrumentId === 7) {
+            const drumName = DRUM_NOTE_MAP[note.n] || 'kick';
+            instrument.start({
+                note: drumName,
+                velocity: velocity,
+                time: contextTime
+            });
+        } else {
+            // Clamp note to valid piano range (A0=21 to C8=108)
+            const clampedNote = Math.max(21, Math.min(108, note.n));
+            instrument.start({
+                note: clampedNote,
+                velocity: velocity,
+                duration: durationSec,
+                time: contextTime
+            });
+        }
+
+        // Schedule visual callbacks
+        if (scheduleTime > 0) {
+            const startTimeout = setTimeout(() => {
+                if (this.onNoteStart) this.onNoteStart(note);
+            }, scheduleTime);
+            this.scheduledEvents.push(startTimeout);
+
+            const endTimeout = setTimeout(() => {
+                if (this.onNoteEnd) this.onNoteEnd(note);
+            }, scheduleTime + note.d);
+            this.scheduledEvents.push(endTimeout);
+        } else {
+            // Note should start now
+            if (this.onNoteStart) this.onNoteStart(note);
+            const endTimeout = setTimeout(() => {
+                if (this.onNoteEnd) this.onNoteEnd(note);
+            }, Math.max(0, noteTimeMs + note.d - currentTimeMs));
+            this.scheduledEvents.push(endTimeout);
+        }
     }
 
     async play() {
         await this.init();
-        await Tone.start();
+
+        if (this.context.state === 'suspended') {
+            await this.context.resume();
+        }
+
         this.isPlaying = true;
-        Tone.Transport.start();
+        this.playbackStartTime = this.context.currentTime - (this.playbackPosition / 1000);
+
+        // Schedule all notes from current position
+        for (const note of this.notes) {
+            this._scheduleNotePlayback(note);
+        }
+
         if (this.onPlayStateChange) {
             this.onPlayStateChange(true);
         }
@@ -229,10 +207,13 @@ class AudioPlayer {
 
     pause() {
         this.isPlaying = false;
-        Tone.Transport.pause();
+        this.playbackPosition = this.getCurrentTime();
+        this._clearScheduledEvents();
+        this._stopAllInstruments();
         this.stopTimeAnimation();
+
         if (this.onTimeUpdate) {
-            this.onTimeUpdate(this.getCurrentTime(), this.getTotalDuration());
+            this.onTimeUpdate(this.playbackPosition, this.getTotalDuration());
         }
         if (this.onPlayStateChange) {
             this.onPlayStateChange(false);
@@ -241,9 +222,11 @@ class AudioPlayer {
 
     stop() {
         this.isPlaying = false;
-        Tone.Transport.stop();
-        Tone.Transport.seconds = 0;
+        this.playbackPosition = 0;
+        this._clearScheduledEvents();
+        this._stopAllInstruments();
         this.stopTimeAnimation();
+
         if (this.onPlayStateChange) {
             this.onPlayStateChange(false);
         }
@@ -252,18 +235,30 @@ class AudioPlayer {
         }
     }
 
+    _clearScheduledEvents() {
+        for (const timeoutId of this.scheduledEvents) {
+            clearTimeout(timeoutId);
+        }
+        this.scheduledEvents = [];
+    }
+
+    _stopAllInstruments() {
+        for (const instrument of Object.values(this.instruments)) {
+            if (instrument && instrument.stop) {
+                instrument.stop();
+            }
+        }
+    }
+
     clear() {
         this.stop();
-        Tone.Transport.cancel();
         this.scheduledNotes.clear();
         this.notes = [];
         this.startOffset = 0;
-        Tone.Transport.loop = false;
+        this.playbackPosition = 0;
     }
 
     finalize() {
-        // Called when generation complete
-        // If autoPlay enabled and not playing, start now
         if (this.autoPlay && !this.isPlaying && this.scheduledNotes.size > 0) {
             this.play();
         }
@@ -275,11 +270,10 @@ class AudioPlayer {
 
     setLoop(enabled) {
         this.isLooping = enabled;
-        this.syncLoopPoints();
     }
 
     setTempo(bpm) {
-        Tone.Transport.bpm.value = bpm;
+        this.tempo = bpm;
     }
 
     startTimeAnimation() {
@@ -287,16 +281,24 @@ class AudioPlayer {
         if (this.onTimeUpdate) {
             this.onTimeUpdate(this.getCurrentTime(), this.getTotalDuration());
         }
+
         const tick = () => {
             const current = this.getCurrentTime();
             const total = this.getTotalDuration();
 
-            if (!this.isLooping && total > 0 && current >= total - 5) {
-                // Snap to end and pause transport so the playhead stops at song end
+            if (this.isLooping && total > 0 && current >= total) {
+                // Loop back to start
+                this.playbackPosition = 0;
+                this.playbackStartTime = this.context.currentTime;
+                this._clearScheduledEvents();
+                for (const note of this.notes) {
+                    this._scheduleNotePlayback(note);
+                }
+            } else if (!this.isLooping && total > 0 && current >= total - 5) {
+                // End of playback
                 this.stopTimeAnimation();
-                Tone.Transport.pause();
-                Tone.Transport.seconds = total / 1000;
                 this.isPlaying = false;
+                this.playbackPosition = total;
                 if (this.onTimeUpdate) this.onTimeUpdate(total, total);
                 if (this.onPlayStateChange) this.onPlayStateChange(false);
                 return;
@@ -311,10 +313,10 @@ class AudioPlayer {
     }
 
     getCurrentTime() {
-        // Compensate for lookahead latency to match visual playhead with audible sound
-        const lookAhead = Tone.context ? (Tone.context.lookAhead || 0) : 0;
-        const time = Math.max(0, (Tone.Transport.seconds - lookAhead) * 1000);
-        return isNaN(time) ? 0 : time;
+        if (!this.isPlaying) {
+            return this.playbackPosition;
+        }
+        return (this.context.currentTime - this.playbackStartTime) * 1000;
     }
 
     getTotalDuration() {
@@ -329,9 +331,15 @@ class AudioPlayer {
 
     seek(timeMs) {
         const wasPlaying = this.isPlaying;
-        Tone.Transport.seconds = timeMs / 1000;
-        if (wasPlaying && Tone.Transport.state !== 'started') {
-            Tone.Transport.start();
+        this._clearScheduledEvents();
+        this._stopAllInstruments();
+        this.playbackPosition = timeMs;
+
+        if (wasPlaying) {
+            this.playbackStartTime = this.context.currentTime - (timeMs / 1000);
+            for (const note of this.notes) {
+                this._scheduleNotePlayback(note);
+            }
         }
     }
 
@@ -342,23 +350,11 @@ class AudioPlayer {
         }
     }
 
-    // Set start offset for refinement mode
     setStartOffset(offsetMs) {
         this.startOffset = offsetMs;
     }
 
-    // Get notes for export
     getNotes() {
         return [...this.notes];
-    }
-
-    syncLoopPoints() {
-        const totalSeconds = this.getTotalDuration() / 1000;
-        const shouldLoop = this.isLooping && totalSeconds > 0;
-        Tone.Transport.loop = shouldLoop;
-        if (shouldLoop) {
-            Tone.Transport.loopStart = 0;
-            Tone.Transport.loopEnd = totalSeconds;
-        }
     }
 }
