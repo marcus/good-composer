@@ -16,9 +16,11 @@ class ComposerApp {
         this.input = document.getElementById('prompt');
         this.clearBtn = document.getElementById('clear-btn');
         this.refineBtn = document.getElementById('refine-btn');
+        this.bankSelect = document.getElementById('bank-select');
         this.modelSelect = document.getElementById('model-select');
         this.status = document.getElementById('status');
         this.thinkingOverlay = document.getElementById('thinking-overlay');
+        this.instrumentLegend = document.getElementById('instrument-legend');
 
         // Transport controls
         this.playPauseBtn = document.getElementById('play-pause');
@@ -35,6 +37,7 @@ class ComposerApp {
         this.pingTimer = null;
         this.reconnectAttempt = 0;
         this.thinkingText = '';
+        this.pendingBankPromise = null;
 
         // Refinement state
         this.hasCompletedComposition = false;
@@ -65,7 +68,8 @@ class ComposerApp {
         this.player = new AudioPlayer();
         this.parser = new MidiParser(
             (note) => this.onNote(note),
-            (warning) => this.logWarning(warning)
+            (warning) => this.logWarning(warning),
+            (bank) => this.onBankSelected(bank, { source: 'llm' })
         );
         this.loader = new MusicLoader(this.loadingCanvas);
 
@@ -79,6 +83,7 @@ class ComposerApp {
         this.player.onPlayStateChange = () => {
             this.updatePlayPauseButton();
         };
+        this.player.onBankChange = (bankId) => this.updateLegend(bankId);
 
         this.init();
     }
@@ -109,12 +114,152 @@ class ComposerApp {
             this.loader.resize();
         });
 
+        // Bank change handler
+        this.bankSelect.addEventListener('change', () => this.onBankChange());
+
         this.loadGalleryFromSession();
+        this.loadBankFromSession();
+        this.fetchBanks();
         this.fetchModels();
         this.connect();
     }
 
+    loadBankFromSession() {
+        try {
+            const saved = sessionStorage.getItem('composerBank');
+            if (saved && saved !== 'null') {
+                this.player.currentBank = saved;
+            }
+        } catch (e) {
+            console.warn('Failed to load bank from session:', e);
+        }
+    }
+
+    saveBankToSession(bankId) {
+        try {
+            sessionStorage.setItem('composerBank', bankId);
+        } catch (e) {
+            console.warn('Failed to save bank to session:', e);
+        }
+    }
+
+    async fetchBanks() {
+        try {
+            const resp = await fetch('/api/banks');
+            const data = await resp.json();
+            const banks = data.banks || [];
+
+            this.bankSelect.innerHTML = '';
+            banks.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.id;
+                opt.textContent = b.name;
+                opt.title = b.desc;
+                this.bankSelect.appendChild(opt);
+            });
+
+            // Restore from session or default
+            const saved = sessionStorage.getItem('composerBank');
+            if (saved && this.bankSelect.querySelector(`option[value="${saved}"]`)) {
+                this.bankSelect.value = saved;
+            } else {
+                this.bankSelect.value = 'auto';
+            }
+
+            // Update legend/hues to match selected (or default) bank
+            const selectedBank = this.bankSelect.value === 'auto' ? DEFAULT_BANK : this.bankSelect.value;
+            this.updateLegend(selectedBank);
+            const hues = (typeof getInstrumentHues === 'function') ? getInstrumentHues(selectedBank) : {};
+            this.pianoRoll.updateHues(hues);
+        } catch (e) {
+            console.warn('Failed to fetch banks:', e);
+        }
+    }
+
+    async onBankChange() {
+        const bankId = this.bankSelect.value;
+        this.saveBankToSession(bankId);
+        await this.onBankSelected(bankId, { source: 'user' });
+    }
+
+    updateLegend(bankId) {
+        if (!bankId || bankId === 'auto') {
+            bankId = DEFAULT_BANK;
+        }
+        const bank = INSTRUMENT_BANKS[bankId];
+        if (!bank) return;
+
+        const items = [];
+        for (let i = 0; i < 8; i++) {
+            const inst = bank.instruments[i];
+            const hue = bank.hues[i];
+            items.push(`<span class="legend-item"><span class="legend-color" style="background: hsl(${hue}, 60%, 50%)"></span>${inst.name}</span>`);
+        }
+        this.instrumentLegend.innerHTML = items.join('\n');
+    }
+
+    async onBankSelected(bankId, { source = 'user' } = {}) {
+        if (!bankId) return;
+
+        // Auto mode: keep current instruments, just update UI/default hues
+        if (bankId === 'auto') {
+            this.saveBankToSession(bankId);
+            this.updateLegend(DEFAULT_BANK);
+            const defaultHues = (typeof getInstrumentHues === 'function') ? getInstrumentHues(DEFAULT_BANK) : {};
+            this.pianoRoll.updateHues(defaultHues);
+            this.pianoRoll.draw();
+            this.pendingBankPromise = null;
+            return;
+        }
+
+        // If LLM picked a bank but user already chose a specific one, don't override
+        if (source === 'llm' && this.bankSelect.value !== 'auto') {
+            return;
+        }
+
+        // Validate bank
+        if (!INSTRUMENT_BANKS[bankId]) {
+            bankId = DEFAULT_BANK;
+        }
+
+        // Persist selection (auto is allowed)
+        this.saveBankToSession(bankId);
+
+        // Update dropdown when not user-driven auto state
+        if (source === 'llm' && this.bankSelect.value === 'auto') {
+            this.bankSelect.value = bankId;
+        } else if (source !== 'user') {
+            this.bankSelect.value = bankId;
+        }
+
+        const promise = this.player.setBank(bankId);
+        this.pendingBankPromise = promise;
+        try {
+            await promise;
+        } catch (e) {
+            console.warn('Failed to set bank', e);
+        } finally {
+            if (this.pendingBankPromise === promise) {
+                this.pendingBankPromise = null;
+            }
+        }
+
+        this.updateLegend(bankId);
+        this.pianoRoll.updateHues(this.player.getInstrumentHues());
+        this.pianoRoll.draw();
+        this.updatePlayPauseButton();
+    }
+
     onNote(note) {
+        if (this.pendingBankPromise) {
+            // Delay note handling until bank switch completes
+            this.pendingBankPromise.finally(() => this.handleNote(note));
+            return;
+        }
+        this.handleNote(note);
+    }
+
+    handleNote(note) {
         this.startGenerating();
         this.pianoRoll.addNote(note);
         this.player.scheduleNote(note);
@@ -319,6 +464,12 @@ class ComposerApp {
             case 'done':
                 this.stopAll();
                 this.setStatus('');
+
+                // Handle LLM-selected bank (auto mode) - update dropdown to show what was picked
+                if (msg.bank) {
+                    this.onBankSelected(msg.bank, { source: 'llm' });
+                }
+
                 this.player.finalize();
                 this.addToGallery();
                 this.hasCompletedComposition = true;
@@ -444,6 +595,9 @@ class ComposerApp {
                 if (selected.maxTokens) maxTokens = selected.maxTokens;
             } catch (e) { }
 
+            // Get selected bank
+            const bankId = this.bankSelect.value;
+
             this.ws.send(JSON.stringify({
                 type: 'compose',
                 prompt: prompt,
@@ -451,7 +605,8 @@ class ComposerApp {
                 model: model,
                 provider: provider,
                 maxTokens: maxTokens,
-                refine: isRefinement
+                refine: isRefinement,
+                bankId: bankId
             }));
         } else {
             this.setStatus('Not connected', true);
@@ -499,6 +654,7 @@ class ComposerApp {
         this.pianoRoll.clear();
         this.pianoRoll.drawPlayhead(0);  // Clear playhead
         this.parser.reset();
+        this.pendingBankPromise = null;
         this.thinkingText = '';
         this.thinkingOverlay.textContent = '';
         this.thinkingOverlay.classList.remove('fade-out', 'visible');
@@ -619,7 +775,8 @@ class ComposerApp {
             modelName: modelName,
             timestamp: Date.now(),
             duration: this.parser.getEndTime(),
-            tempo: parseInt(this.tempoSlider.value)
+            tempo: parseInt(this.tempoSlider.value),
+            bank: this.player.getBank()
         };
 
         this.galleryItems.unshift(item);
@@ -648,7 +805,7 @@ class ComposerApp {
             const miniCanvas = document.createElement('canvas');
             miniCanvas.width = 80;
             miniCanvas.height = 50;
-            this.drawMiniPianoRoll(miniCanvas, item.midiData);
+            this.drawMiniPianoRoll(miniCanvas, item.midiData, item.bank);
             thumb.appendChild(miniCanvas);
 
             const meta = document.createElement('div');
@@ -670,17 +827,15 @@ class ComposerApp {
         });
     }
 
-    drawMiniPianoRoll(canvas, notes) {
+    drawMiniPianoRoll(canvas, notes, bankId = null) {
         if (notes.length === 0) return;
 
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#1a1a2e';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Instrument color hues
-        const instrumentHues = {
-            0: 180, 1: 30, 2: 270, 3: 60, 4: 210, 5: 120, 6: 300, 7: 0
-        };
+        // Get instrument hues from bank
+        const instrumentHues = getInstrumentHues(bankId || DEFAULT_BANK);
 
         // Find bounds
         let minNote = 127, maxNote = 0, maxTime = 0;
@@ -709,7 +864,7 @@ class ComposerApp {
         }
     }
 
-    loadFromGallery(item) {
+    async loadFromGallery(item) {
         this.cancel();
         this.stopAll();
         this.player.clear();
@@ -727,6 +882,10 @@ class ComposerApp {
         if (this.ws?.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify({ type: 'clear_session' }));
         }
+
+        // Restore bank if saved, otherwise use default
+        const bank = item.bank || DEFAULT_BANK;
+        await this.onBankSelected(bank, { source: 'load' });
 
         // Load notes
         for (const note of item.midiData) {

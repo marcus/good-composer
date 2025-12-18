@@ -1,16 +1,85 @@
 // Progressive MIDI playback using smplr for high-quality instruments
 
-// Instrument configurations mapping instrument IDs to smplr instruments (rock/techno)
-const INSTRUMENT_CONFIGS = {
-    0: { type: 'soundfont', instrument: 'lead_2_sawtooth', name: 'Saw Lead', volume: 0.75 },
-    1: { type: 'soundfont', instrument: 'synth_bass_1', name: 'Synth Bass', volume: 0.9 },
-    2: { type: 'soundfont', instrument: 'synth_strings_1', name: 'Synth Strings', volume: 0.7 },
-    3: { type: 'soundfont', instrument: 'lead_1_square', name: 'Square Lead', volume: 0.7 },
-    4: { type: 'soundfont', instrument: 'pad_3_polysynth', name: 'Polysynth Pad', volume: 0.6 },
-    5: { type: 'soundfont', instrument: 'distortion_guitar', name: 'Distortion Guitar', volume: 0.8 },
-    6: { type: 'soundfont', instrument: 'rock_organ', name: 'Rock Organ', volume: 0.7 },
-    7: { type: 'drums', name: 'Drums', volume: 0.85 }
+// Instrument bank configurations - each bank has 8 instruments (IDs 0-7)
+const INSTRUMENT_BANKS = {
+    electronic: {
+        name: 'Electronic',
+        color: '#00d4ff',
+        instruments: {
+            0: { type: 'soundfont', instrument: 'lead_2_sawtooth', name: 'Saw Lead', volume: 0.75 },
+            1: { type: 'soundfont', instrument: 'synth_bass_1', name: 'Synth Bass', volume: 0.9 },
+            2: { type: 'soundfont', instrument: 'synth_strings_1', name: 'Synth Strings', volume: 0.7 },
+            3: { type: 'soundfont', instrument: 'lead_1_square', name: 'Square Lead', volume: 0.7 },
+            4: { type: 'soundfont', instrument: 'pad_3_polysynth', name: 'Polysynth Pad', volume: 0.6 },
+            5: { type: 'soundfont', instrument: 'distortion_guitar', name: 'Dist Guitar', volume: 0.8 },
+            6: { type: 'soundfont', instrument: 'rock_organ', name: 'Rock Organ', volume: 0.7 },
+            7: { type: 'drums', kit: 'TR-808', name: 'Drums', volume: 0.85 }
+        },
+        hues: { 0: 180, 1: 30, 2: 270, 3: 60, 4: 210, 5: 120, 6: 300, 7: 0 }
+    },
+    acoustic: {
+        name: 'Acoustic/Piano',
+        color: '#f5a623',
+        instruments: {
+            0: { type: 'piano', name: 'Grand Piano', volume: 0.8 },
+            1: { type: 'soundfont', instrument: 'acoustic_bass', name: 'Acoustic Bass', volume: 0.85 },
+            2: { type: 'soundfont', instrument: 'string_ensemble_1', name: 'Strings', volume: 0.7 },
+            3: { type: 'soundfont', instrument: 'flute', name: 'Flute', volume: 0.7 },
+            4: { type: 'soundfont', instrument: 'choir_aahs', name: 'Choir', volume: 0.6 },
+            5: { type: 'soundfont', instrument: 'acoustic_guitar_nylon', name: 'Ac. Guitar', volume: 0.75 },
+            6: { type: 'soundfont', instrument: 'vibraphone', name: 'Vibraphone', volume: 0.7 },
+            7: { type: 'drums', kit: 'acoustic', name: 'Drums', volume: 0.8 }
+        },
+        hues: { 0: 40, 1: 25, 2: 280, 3: 190, 4: 320, 5: 35, 6: 50, 7: 0 }
+    },
+    orchestral: {
+        name: 'Orchestral/Cinematic',
+        color: '#9b59b6',
+        instruments: {
+            0: { type: 'piano', name: 'Piano', volume: 0.75 },
+            1: { type: 'soundfont', instrument: 'contrabass', name: 'Contrabass', volume: 0.85 },
+            2: { type: 'soundfont', instrument: 'string_ensemble_1', name: 'Strings', volume: 0.75 },
+            3: { type: 'soundfont', instrument: 'brass_section', name: 'Brass', volume: 0.7 },
+            4: { type: 'soundfont', instrument: 'choir_aahs', name: 'Choir', volume: 0.65 },
+            5: { type: 'soundfont', instrument: 'orchestral_harp', name: 'Harp', volume: 0.7 },
+            6: { type: 'soundfont', instrument: 'oboe', name: 'Woodwinds', volume: 0.7 },
+            7: { type: 'soundfont', instrument: 'timpani', name: 'Timpani', volume: 0.8 }
+        },
+        hues: { 0: 45, 1: 20, 2: 270, 3: 35, 4: 320, 5: 55, 6: 150, 7: 15 }
+    },
+    retro: {
+        name: 'Retro/8-bit',
+        color: '#2ecc71',
+        instruments: {
+            0: { type: 'soundfont', instrument: 'lead_1_square', name: 'Pulse Lead', volume: 0.7 },
+            1: { type: 'soundfont', instrument: 'synth_bass_2', name: 'Triangle Bass', volume: 0.85 },
+            2: { type: 'soundfont', instrument: 'pad_2_warm', name: 'Noise Pad', volume: 0.5 },
+            3: { type: 'soundfont', instrument: 'lead_1_square', name: 'Square Lead', volume: 0.7 },
+            4: { type: 'soundfont', instrument: 'lead_6_voice', name: 'Arp Synth', volume: 0.65 },
+            5: { type: 'soundfont', instrument: 'synth_brass_1', name: 'Chip Pluck', volume: 0.7 },
+            6: { type: 'soundfont', instrument: 'fx_1_rain', name: 'FM Bells', volume: 0.6 },
+            7: { type: 'drums', kit: 'TR-808', name: 'Drums', volume: 0.8 }
+        },
+        hues: { 0: 120, 1: 200, 2: 280, 3: 80, 4: 160, 5: 100, 6: 240, 7: 0 }
+    }
 };
+
+const DEFAULT_BANK = 'electronic';
+
+// Helper to get current bank config
+function getBankConfig(bankId) {
+    return INSTRUMENT_BANKS[bankId] || INSTRUMENT_BANKS[DEFAULT_BANK];
+}
+
+// Helper to get instrument configs for a bank
+function getInstrumentConfigs(bankId) {
+    return getBankConfig(bankId).instruments;
+}
+
+// Helper to get instrument hues for a bank
+function getInstrumentHues(bankId) {
+    return getBankConfig(bankId).hues;
+}
 
 // Map MIDI drum notes to smplr DrumMachine sample names
 const DRUM_NOTE_MAP = {
@@ -39,9 +108,15 @@ class AudioPlayer {
         this.onNoteEnd = null;
         this.onTimeUpdate = null;
         this.onPlayStateChange = null;
+        this.onBankChange = null;  // Callback for bank changes
         this.animationId = null;
         this.initialized = false;
         this.smplrModule = null;
+
+        // Bank state
+        this.currentBank = DEFAULT_BANK;
+        this.loadedBank = null;  // Which bank is currently loaded
+        this.isLoadingBank = false;
 
         // Playback state
         this.playbackStartTime = 0;
@@ -50,23 +125,38 @@ class AudioPlayer {
         this.tempo = 120;
     }
 
-    async init() {
-        if (this.initialized) return;
-
+    async init(bankId = null) {
         // Dynamic import of smplr
         if (!this.smplrModule) {
             this.smplrModule = await import("https://unpkg.com/smplr/dist/index.mjs");
         }
 
+        // Create AudioContext if needed
+        if (!this.context) {
+            this.context = new AudioContext();
+        }
+
+        // Load instruments for the specified or current bank
+        const targetBank = bankId || this.currentBank;
+        await this._loadBankInstruments(targetBank);
+        this.initialized = true;
+    }
+
+    async _loadBankInstruments(bankId) {
+        if (this.loadedBank === bankId) return;
+        if (this.isLoadingBank) return;
+
+        this.isLoadingBank = true;
         const { SplendidGrandPiano, Soundfont, DrumMachine } = this.smplrModule;
+        const configs = getInstrumentConfigs(bankId);
 
-        // Create AudioContext
-        this.context = new AudioContext();
+        // Dispose existing instruments
+        this._disposeInstruments();
 
-        // Create all instruments
+        // Create all instruments for this bank
         const loadPromises = [];
 
-        for (const [id, config] of Object.entries(INSTRUMENT_CONFIGS)) {
+        for (const [id, config] of Object.entries(configs)) {
             let instrument;
 
             if (config.type === 'piano') {
@@ -91,8 +181,64 @@ class AudioPlayer {
 
         // Wait for all instruments to load
         await Promise.all(loadPromises);
-        this.initialized = true;
-        console.log('smplr instruments loaded');
+        this.loadedBank = bankId;
+        this.currentBank = bankId;
+        this.isLoadingBank = false;
+        console.log(`bank loaded: ${bankId}`);
+    }
+
+    _disposeInstruments() {
+        for (const instrument of Object.values(this.instruments)) {
+            if (instrument && instrument.stop) {
+                instrument.stop();
+            }
+        }
+        this.instruments = {};
+    }
+
+    async setBank(bankId) {
+        if (bankId === this.currentBank && this.loadedBank === bankId) return;
+
+        const wasPlaying = this.isPlaying;
+        const savedPosition = this.playbackPosition;
+
+        // Stop current playback
+        if (this.isPlaying) {
+            this.pause();
+        }
+
+        // Clear scheduled events
+        this._clearScheduledEvents();
+        this._stopAllInstruments();
+
+        // Load new bank
+        this.currentBank = bankId;
+        if (this.initialized && this.smplrModule) {
+            await this._loadBankInstruments(bankId);
+        }
+
+        // Notify listeners
+        if (this.onBankChange) {
+            this.onBankChange(bankId);
+        }
+
+        // Resume playback if was playing (replay notes from current position)
+        if (wasPlaying && this.notes.length > 0) {
+            this.playbackPosition = savedPosition;
+            await this.play();
+        }
+    }
+
+    getBank() {
+        return this.currentBank;
+    }
+
+    getBankConfig() {
+        return getBankConfig(this.currentBank);
+    }
+
+    getInstrumentHues() {
+        return getInstrumentHues(this.currentBank);
     }
 
     normalizeVolume(vol) {
@@ -185,7 +331,7 @@ class AudioPlayer {
     }
 
     async play() {
-        await this.init();
+        await this.init(this.currentBank);
 
         if (this.context.state === 'suspended') {
             await this.context.resume();
@@ -256,6 +402,7 @@ class AudioPlayer {
         this.notes = [];
         this.startOffset = 0;
         this.playbackPosition = 0;
+        // Don't reset bank - keep it for next composition
     }
 
     finalize() {

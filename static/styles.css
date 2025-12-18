@@ -311,6 +311,7 @@ body {
     color: var(--bg-primary);
 }
 
+.bank-select,
 .model-select {
     height: 3.5rem;
     padding: 0 2.5rem 0 1rem;
@@ -321,7 +322,6 @@ body {
     color: var(--text-primary);
     cursor: pointer;
     outline: none;
-    min-width: 150px;
     appearance: none;
     -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0a0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -330,6 +330,15 @@ body {
     background-size: 1rem;
 }
 
+.bank-select {
+    min-width: 120px;
+}
+
+.model-select {
+    min-width: 150px;
+}
+
+.bank-select:focus,
 .model-select:focus {
     border-color: var(--accent);
 }

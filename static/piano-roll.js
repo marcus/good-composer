@@ -30,16 +30,9 @@ class PianoRoll {
             keyBlack: '#1a1a1a'
         };
 
-        // Instrument color palette (HSL hues)
-        this.instrumentColors = {
-            0: { hue: 180, name: 'piano' },    // Cyan
-            1: { hue: 30, name: 'bass' },      // Orange
-            2: { hue: 270, name: 'strings' },  // Purple
-            3: { hue: 60, name: 'lead' },      // Yellow
-            4: { hue: 210, name: 'pad' },      // Blue
-            5: { hue: 120, name: 'pluck' },    // Green
-            6: { hue: 300, name: 'organ' },    // Magenta
-            7: { hue: 0, name: 'drums' }       // Red
+        // Instrument color palette (HSL hues) - will be updated based on selected bank
+        this.instrumentHues = {
+            0: 180, 1: 30, 2: 270, 3: 60, 4: 210, 5: 120, 6: 300, 7: 0
         };
 
         this.resize();
@@ -182,17 +175,17 @@ class PianoRoll {
 
         const ctx = this.ctx;
 
-        // Continuous velocity gradient: Blue (low) -> Cyan -> Green -> Yellow -> Orange -> Red (high)
+        // Color based on instrument with velocity brightness
         let fillStyle;
         if (isActive) {
             fillStyle = this.colors.noteActive;
         } else {
+            const instrumentId = note.i ?? 0;
+            const hue = this.instrumentHues[instrumentId] ?? 180;
             const v = Math.max(1, Math.min(127, note.v || 80));
-            // Map velocity 1-127 to hue 220-0 (blue to red via cyan/green/yellow/orange)
-            const hue = 220 - (v / 127) * 220;
             // Higher velocity = more saturation and brightness
-            const sat = 60 + (v / 127) * 30;
-            const light = 45 + (v / 127) * 15;
+            const sat = 50 + (v / 127) * 30;
+            const light = 40 + (v / 127) * 20;
             fillStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
         }
 
@@ -266,6 +259,16 @@ class PianoRoll {
         this.playheadTime = 0;
         this.render();
         this.playheadCtx.clearRect(0, 0, this.displayWidth, this.displayHeight);
+    }
+
+    updateHues(hues) {
+        if (hues && typeof hues === 'object') {
+            this.instrumentHues = { ...this.instrumentHues, ...hues };
+        }
+    }
+
+    draw() {
+        this.render();
     }
 
     // Coordinate helpers

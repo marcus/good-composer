@@ -1,18 +1,21 @@
 // Streaming MIDI JSON parser that extracts note events from LLM output
 
 class MidiParser {
-    constructor(onNote, onWarning = null) {
+    constructor(onNote, onWarning = null, onBank = null) {
         this.onNote = onNote;
         this.onWarning = onWarning;
+        this.onBank = onBank;
         this.buffer = '';
         this.notes = [];
         this.processedPositions = new Set();
+        this.bank = null;
     }
 
     reset() {
         this.buffer = '';
         this.notes = [];
         this.processedPositions.clear();
+        this.bank = null;
     }
 
     feed(chunk) {
@@ -33,11 +36,19 @@ class MidiParser {
             }
 
             try {
-                const note = JSON.parse(match[0]);
-                if (this.validateNote(note)) {
-                    this.notes.push(note);
+                const obj = JSON.parse(match[0]);
+                // Bank selection (LLM first line)
+                if (obj && typeof obj.bank === 'string') {
+                    this.bank = obj.bank;
+                    if (this.onBank) this.onBank(obj.bank);
                     this.processedPositions.add(match.index);
-                    this.onNote(note);
+                    continue;
+                }
+
+                if (this.validateNote(obj)) {
+                    this.notes.push(obj);
+                    this.processedPositions.add(match.index);
+                    this.onNote(obj);
                 }
             } catch (e) {
                 // Invalid JSON, might be incomplete - skip
