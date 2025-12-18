@@ -153,7 +153,7 @@ Guidelines:
 - Melody (i=0,3): notes 60-84, prominence
 - Pads/strings (i=2,4): notes 48-72, harmonic support
 - Vary velocity for dynamics (soft: 40-60, medium: 70-90, loud: 100-127)
-- Generate at least 50-100 notes for a complete piece
+- Generate at least 200-500 notes for a complete piece
 
 Example:
 {{"t": 0, "n": 36, "v": 70, "d": 2000, "i": 1}}
