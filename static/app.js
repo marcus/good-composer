@@ -742,8 +742,9 @@ class ComposerApp {
             el.classList.toggle('active', el.dataset.id === item.id);
         });
 
-        // Fit view to notes
+        // Fit view to notes and draw playhead at start
         this.pianoRoll.fitToNotes();
+        this.pianoRoll.drawPlayhead(0);
         this.updatePlayPauseButton();
         this.updateTimeDisplay(0, item.duration);
     }

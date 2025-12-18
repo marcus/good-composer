@@ -1,6 +1,10 @@
 # GOOD COMPOSER 🎹
 THE WORLD'S MOST AMAZING AI MUSICIAN!!!
 
+<p align="center">
+  <img src="static/screenshot-01.png" width="800" alt="Good Composer">
+</p>
+
 ## LISTEN TO THIS INCREDIBLE MUSIC!!!
 
 <p align="center">

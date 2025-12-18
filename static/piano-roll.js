@@ -171,19 +171,18 @@ class PianoRoll {
 
         const ctx = this.ctx;
 
-        // Logic Pro Velocity Scaling (Red -> Orange -> Yellow -> Green -> Blue)
+        // Continuous velocity gradient: Blue (low) -> Cyan -> Green -> Yellow -> Orange -> Red (high)
         let fillStyle;
         if (isActive) {
             fillStyle = this.colors.noteActive;
         } else {
-            const v = note.v || 80;
-            if (v >= 100) {
-                fillStyle = `hsl(${0 + (127 - v) * 0.5}, 80%, 50%)`; // Red to Orange
-            } else if (v >= 60) {
-                fillStyle = `hsl(${40 + (100 - v) * 1.5}, 70%, 50%)`; // Orange to Green
-            } else {
-                fillStyle = `hsl(${120 + (60 - v) * 1.5}, 60%, 50%)`; // Green to Blue
-            }
+            const v = Math.max(1, Math.min(127, note.v || 80));
+            // Map velocity 1-127 to hue 220-0 (blue to red via cyan/green/yellow/orange)
+            const hue = 220 - (v / 127) * 220;
+            // Higher velocity = more saturation and brightness
+            const sat = 60 + (v / 127) * 30;
+            const light = 45 + (v / 127) * 15;
+            fillStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
         }
 
         ctx.fillStyle = fillStyle;
@@ -224,6 +223,9 @@ class PianoRoll {
     }
 
     startAnimation(getTime) {
+        // Stop any existing animation first to prevent duplicates
+        this.stopAnimation();
+
         const animate = () => {
             const time = getTime();
             this.autoScroll(time);
