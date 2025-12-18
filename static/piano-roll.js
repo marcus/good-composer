@@ -161,13 +161,21 @@ class PianoRoll {
     }
 
     drawNote(note) {
-        const x = this.timeToX(note.t);
-        const width = this.durationToWidth(note.d);
-        const y = this.noteToY(note.n);
-        const height = this.noteHeight - 1;
+        const noteStart = note.t;
+        const noteEnd = note.t + note.d;
+        const viewEnd = this.viewStart + this.viewDuration;
 
-        // Skip if not visible
-        if (x + width < this.keyWidth || x > this.displayWidth) return;
+        // Skip if note is completely outside the viewport
+        if (noteEnd <= this.viewStart || noteStart >= viewEnd) return;
+
+        // Clip long notes so they shrink smoothly as they exit the view
+        const visibleStart = Math.max(noteStart, this.viewStart);
+        const visibleEnd = Math.min(noteEnd, viewEnd);
+
+        const x = this.timeToX(visibleStart);
+        const width = this.durationToWidth(visibleEnd - visibleStart);
+        const y = this.noteToY(note.n);
+        const height = Math.max(1, this.noteHeight - 1);
 
         const key = `${note.t}-${note.n}`;
         const isActive = this.activeNotes.has(key);
