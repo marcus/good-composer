@@ -1,8 +1,80 @@
-// Progressive MIDI playback using Tone.js
+// Progressive MIDI playback using Tone.js with multi-instrument support
+
+// Instrument definitions with Tone.js synth configurations
+const INSTRUMENTS = {
+    0: {  // Piano
+        name: 'piano',
+        create: () => new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'triangle' },
+            envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 0.8 }
+        }),
+        volume: -6
+    },
+    1: {  // Bass
+        name: 'bass',
+        create: () => new Tone.MonoSynth({
+            oscillator: { type: 'sawtooth' },
+            envelope: { attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.4 },
+            filterEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.4, baseFrequency: 200, octaves: 2 }
+        }),
+        volume: -3
+    },
+    2: {  // Strings
+        name: 'strings',
+        create: () => new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.3, decay: 0.5, sustain: 0.7, release: 1.2 }
+        }),
+        volume: -8
+    },
+    3: {  // Lead
+        name: 'lead',
+        create: () => new Tone.MonoSynth({
+            oscillator: { type: 'square' },
+            envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 },
+            filterEnvelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.3, baseFrequency: 800, octaves: 3 }
+        }),
+        volume: -6
+    },
+    4: {  // Pad
+        name: 'pad',
+        create: () => new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.8, decay: 1.0, sustain: 0.9, release: 2.0 }
+        }),
+        volume: -10
+    },
+    5: {  // Pluck
+        name: 'pluck',
+        create: () => new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'triangle' },
+            envelope: { attack: 0.001, decay: 0.2, sustain: 0.1, release: 0.3 }
+        }),
+        volume: -6
+    },
+    6: {  // Organ
+        name: 'organ',
+        create: () => new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sine', partialCount: 4, partials: [1, 0.5, 0.25, 0.125] },
+            envelope: { attack: 0.05, decay: 0.1, sustain: 0.9, release: 0.5 }
+        }),
+        volume: -8
+    },
+    7: {  // Drums
+        name: 'drums',
+        create: () => new Tone.MembraneSynth({
+            pitchDecay: 0.05,
+            octaves: 4,
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.4 }
+        }),
+        volume: -4
+    }
+};
 
 class AudioPlayer {
     constructor() {
-        this.synth = null;
+        this.synths = {};  // Map of instrument ID to synth
         this.scheduledNotes = new Set();
         this.notes = [];
         this.isPlaying = false;
@@ -19,26 +91,28 @@ class AudioPlayer {
     async init() {
         if (this.initialized) return;
 
-        // Create a polyphonic synth with piano-like sound
-        this.synth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: {
-                type: 'triangle'
-            },
-            envelope: {
-                attack: 0.02,
-                decay: 0.3,
-                sustain: 0.4,
-                release: 0.8
-            }
-        }).toDestination();
+        // Create all instrument synths (use numeric keys)
+        for (let id = 0; id <= 7; id++) {
+            const config = INSTRUMENTS[id];
+            const synth = config.create();
+            synth.volume.value = config.volume;
+            synth.toDestination();
+            this.synths[id] = synth;
+        }
 
-        this.synth.volume.value = -6; // Reduce volume slightly
         this.initialized = true;
     }
 
+    getSynth(instrumentId) {
+        // Default to piano (0) for unknown instruments
+        const id = (instrumentId in this.synths) ? instrumentId : 0;
+        return this.synths[id];
+    }
+
     scheduleNote(note) {
-        // Progressive scheduling - add notes as they arrive
-        const noteId = `${note.t}-${note.n}-${note.d}`;
+        // Include instrument in note ID for uniqueness
+        const instrumentId = note.i ?? 0;
+        const noteId = `${note.t}-${note.n}-${note.d}-${instrumentId}`;
         if (this.scheduledNotes.has(noteId)) return;
         this.scheduledNotes.add(noteId);
         this.notes.push(note);
@@ -50,8 +124,10 @@ class AudioPlayer {
 
         // Schedule relative to transport
         Tone.Transport.schedule((time) => {
-            if (this.synth) {
-                this.synth.triggerAttackRelease(noteName, durationInSeconds, time, velocity);
+            // Look up synth at playback time (after init)
+            const synth = this.getSynth(instrumentId);
+            if (synth) {
+                synth.triggerAttackRelease(noteName, durationInSeconds, time, velocity);
             }
             if (this.onNoteStart) {
                 Tone.Draw.schedule(() => this.onNoteStart(note), time);
@@ -112,8 +188,16 @@ class AudioPlayer {
         this.autoPlay = enabled;
     }
 
+    setLoop(enabled) {
+        this.isLooping = enabled;
+    }
+
     setTempo(bpm) {
         Tone.Transport.bpm.value = bpm;
+    }
+
+    startTimeAnimation() {
+        // Animation is handled by PianoRoll
     }
 
     getCurrentTime() {

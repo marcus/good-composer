@@ -28,36 +28,59 @@ log = logging.getLogger(__name__)
 
 app = FastAPI()
 
-SYSTEM_PROMPT = """You are a music composer generating MIDI sequences.
+# Instrument definitions
+INSTRUMENTS = {
+    0: {"name": "piano", "range": (36, 96), "desc": "versatile melodic instrument"},
+    1: {"name": "bass", "range": (24, 60), "desc": "low-end foundation"},
+    2: {"name": "strings", "range": (48, 84), "desc": "sustained harmonic pads"},
+    3: {"name": "lead", "range": (60, 96), "desc": "bright melodic lines"},
+    4: {"name": "pad", "range": (48, 84), "desc": "ambient atmospheric sounds"},
+    5: {"name": "pluck", "range": (48, 84), "desc": "short percussive notes"},
+    6: {"name": "organ", "range": (36, 84), "desc": "sustained rich harmonics"},
+    7: {"name": "drums", "range": (36, 72), "desc": "rhythmic percussion"},
+}
 
-Output format: JSON array of note events, one per line for streaming.
-Each event: {"t": <time_ms>, "n": <note_0-127>, "v": <velocity_1-127>, "d": <duration_ms>}
+SYSTEM_PROMPT = """You are a music composer generating MIDI sequences with multiple instruments.
+
+Output format: JSON note events, one per line for streaming.
+Each event: {"t": <time_ms>, "n": <note_0-127>, "v": <velocity_1-127>, "d": <duration_ms>, "i": <instrument_id>}
+
+Available instruments:
+- 0: piano (range 36-96) - versatile melodic instrument, good for melodies and chords
+- 1: bass (range 24-60) - low-end foundation, single notes or simple patterns
+- 2: strings (range 48-84) - sustained harmonic pads, long notes for atmosphere
+- 3: lead (range 60-96) - bright melodic lines, for standout melodies
+- 4: pad (range 48-84) - ambient atmospheric sounds, sustained chords
+- 5: pluck (range 48-84) - short percussive notes, good for arpeggios
+- 6: organ (range 36-84) - sustained rich harmonics
+- 7: drums (range 36-72) - rhythmic percussion
 
 Guidelines:
 - Output ONLY valid JSON note events, one per line
-- Start notes at t=0 or shortly after
-- Use musical scales and chord progressions
+- Choose 2-4 instruments that match the requested style/mood
+- Keep each instrument within its optimal pitch range
+- Bass (i=1): notes 24-48, foundation
+- Melody (i=0,3): notes 60-84, prominence
+- Pads/strings (i=2,4): notes 48-72, harmonic support
 - Vary velocity for dynamics (soft: 40-60, medium: 70-90, loud: 100-127)
-- Keep melodies within reasonable range (48-84 for most instruments)
-- Create coherent musical phrases, not random notes
-- Generate at least 50-100 notes for a complete musical piece
-- Include bass notes (36-48), chords (48-72), and melody (60-84)
+- Generate at least 50-100 notes for a complete piece
 
-Example output:
-{"t": 0, "n": 60, "v": 80, "d": 500}
-{"t": 0, "n": 64, "v": 75, "d": 500}
-{"t": 0, "n": 67, "v": 70, "d": 500}
-{"t": 500, "n": 62, "v": 85, "d": 500}
-{"t": 500, "n": 65, "v": 80, "d": 500}
-{"t": 1000, "n": 64, "v": 90, "d": 1000}"""
+Example (jazz ballad):
+{"t": 0, "n": 36, "v": 70, "d": 2000, "i": 1}
+{"t": 0, "n": 60, "v": 65, "d": 1500, "i": 4}
+{"t": 0, "n": 64, "v": 60, "d": 1500, "i": 4}
+{"t": 500, "n": 72, "v": 85, "d": 500, "i": 0}
+{"t": 1000, "n": 74, "v": 80, "d": 400, "i": 0}"""
 
-REFINEMENT_PROMPT = """You are ADDING to an existing MIDI sequence.
+REFINEMENT_PROMPT = """You are ADDING to an existing MIDI sequence with multiple instruments.
 The existing sequence ends at time {end_time}ms.
 - Start your new notes AFTER the existing sequence (t > {end_time})
-- Continue the musical style and key
+- Continue the musical style, key, and instrumentation
+- Use the same instruments (i field) as the existing composition
 - Output ONLY new note events as JSON, one per line
-- Do NOT repeat any existing notes
-- Generate at least 30-50 new notes"""
+- Generate at least 30-50 new notes
+
+Available instruments: 0=piano, 1=bass, 2=strings, 3=lead, 4=pad, 5=pluck, 6=organ, 7=drums"""
 
 # Timeouts (seconds) - generous for local LLMs
 START_CHUNK_DEADLINE = 60.0
@@ -159,6 +182,12 @@ async def handle_compose(websocket: WebSocket, prompt: str, req_id: str, model: 
                     try:
                         note = json.loads(line)
                         if all(k in note for k in ["t", "n", "v", "d"]):
+                            # Default instrument to piano if missing
+                            if "i" not in note:
+                                note["i"] = 0
+                            # Validate instrument ID
+                            if note["i"] not in INSTRUMENTS:
+                                note["i"] = 0
                             new_notes.append(note)
                     except json.JSONDecodeError:
                         pass

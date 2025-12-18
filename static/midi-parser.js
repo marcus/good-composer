@@ -77,6 +77,15 @@ class MidiParser {
         if (typeof note.n !== 'number' || note.n < 0 || note.n > 127) return false;
         if (typeof note.v !== 'number' || note.v < 1 || note.v > 127) return false;
         if (typeof note.d !== 'number' || note.d <= 0) return false;
+
+        // Validate optional instrument field (default to 0 if missing/invalid)
+        if (note.i !== undefined) {
+            if (typeof note.i !== 'number' || note.i < 0 || note.i > 7) {
+                note.i = 0;
+            }
+        } else {
+            note.i = 0;
+        }
         return true;
     }
 

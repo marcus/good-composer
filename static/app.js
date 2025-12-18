@@ -672,6 +672,11 @@ class ComposerApp {
         ctx.fillStyle = '#1a1a2e';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // Instrument color hues
+        const instrumentHues = {
+            0: 180, 1: 30, 2: 270, 3: 60, 4: 210, 5: 120, 6: 300, 7: 0
+        };
+
         // Find bounds
         let minNote = 127, maxNote = 0, maxTime = 0;
         for (const note of notes) {
@@ -685,14 +690,15 @@ class ComposerApp {
         const timeScale = canvas.width / maxTime;
         const noteScale = canvas.height / noteRange;
 
-        // Draw notes
+        // Draw notes with instrument colors
         for (const note of notes) {
             const x = note.t * timeScale;
             const width = Math.max(note.d * timeScale, 1);
             const y = canvas.height - (note.n - minNote + 1) * noteScale;
             const height = Math.max(noteScale - 1, 1);
 
-            const hue = 160 + (note.n % 12) * 8;
+            const instrumentId = note.i ?? 0;
+            const hue = instrumentHues[instrumentId] ?? 180;
             ctx.fillStyle = `hsl(${hue}, 60%, 50%)`;
             ctx.fillRect(x, y, width, height);
         }

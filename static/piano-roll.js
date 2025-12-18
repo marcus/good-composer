@@ -30,6 +30,18 @@ class PianoRoll {
             keyBlack: '#2d2d44'
         };
 
+        // Instrument color palette (HSL hues)
+        this.instrumentColors = {
+            0: { hue: 180, name: 'piano' },    // Cyan
+            1: { hue: 30, name: 'bass' },      // Orange
+            2: { hue: 270, name: 'strings' },  // Purple
+            3: { hue: 60, name: 'lead' },      // Yellow
+            4: { hue: 210, name: 'pad' },      // Blue
+            5: { hue: 120, name: 'pluck' },    // Green
+            6: { hue: 300, name: 'organ' },    // Magenta
+            7: { hue: 0, name: 'drums' }       // Red
+        };
+
         this.resize();
         this.initInteraction();
         this.drawPlayhead(0);
@@ -159,16 +171,18 @@ class PianoRoll {
 
         const ctx = this.ctx;
 
-        // Note color based on velocity and pitch
-        const hue = 160 + (note.n % 12) * 8; // Teal to cyan range
-        const saturation = 60 + (note.v / 127) * 30;
+        // Color based on instrument, with velocity affecting saturation
+        const instrumentId = note.i ?? 0;
+        const instrumentColor = this.instrumentColors[instrumentId] || this.instrumentColors[0];
+        const hue = instrumentColor.hue;
+        const saturation = 50 + (note.v / 127) * 30;
         const lightness = isActive ? 60 : 45;
 
         ctx.fillStyle = isActive ? this.colors.noteActive : `hsl(${hue}, ${saturation}%, ${lightness}%)`;
         ctx.fillRect(Math.max(x, this.keyWidth), y, width, height);
 
         // Border
-        ctx.strokeStyle = isActive ? '#fff' : this.colors.noteBorder;
+        ctx.strokeStyle = isActive ? '#fff' : `hsl(${hue}, ${saturation - 20}%, ${lightness - 10}%)`;
         ctx.lineWidth = isActive ? 2 : 1;
         ctx.strokeRect(Math.max(x, this.keyWidth), y, width, height);
     }
