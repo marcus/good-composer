@@ -59,6 +59,7 @@ class ComposerApp {
             (time) => {
                 this.player.seek(time);
                 this.pianoRoll.drawPlayhead(time);
+                this.updateTimeDisplay(time, this.player.getTotalDuration());
             }
         );
         this.player = new AudioPlayer();
@@ -71,13 +72,11 @@ class ComposerApp {
         // Wire up player callbacks
         this.player.onNoteStart = (note) => this.pianoRoll.setActiveNote(note, true);
         this.player.onNoteEnd = (note) => this.pianoRoll.setActiveNote(note, false);
-        this.player.onTimeUpdate = (current, total) => this.updateTimeDisplay(current, total);
-        this.player.onPlayStateChange = (isPlaying) => {
-            if (isPlaying) {
-                this.pianoRoll.startAnimation(() => this.player.getCurrentTime());
-            } else {
-                this.pianoRoll.stopAnimation();
-            }
+        this.player.onTimeUpdate = (current, total) => {
+            this.pianoRoll.drawPlayhead(current, { ensureVisible: true });
+            this.updateTimeDisplay(current, total);
+        };
+        this.player.onPlayStateChange = () => {
             this.updatePlayPauseButton();
         };
 
@@ -195,16 +194,12 @@ class ComposerApp {
         if (this.state === 'waiting' || this.state === 'thinking') {
             this.state = 'generating';
             this.loader.stop();
-
-            // Start piano roll animation
-            this.pianoRoll.startAnimation(() => this.player.getCurrentTime());
         }
     }
 
     stopAll() {
         this.state = 'idle';
         this.loader.stop();
-        this.pianoRoll.stopAnimation();
         if (this.elapsedTimer) {
             clearInterval(this.elapsedTimer);
             this.elapsedTimer = null;
@@ -530,7 +525,6 @@ class ComposerApp {
 
     stopPlayback() {
         this.player.stop();
-        this.pianoRoll.stopAnimation();
         this.pianoRoll.scrollTo(0);
         this.pianoRoll.drawPlayhead(0);  // Reset playhead to beginning
         this.updatePlayPauseButton();

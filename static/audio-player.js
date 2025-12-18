@@ -1,66 +1,111 @@
 // Progressive MIDI playback using Tone.js with multi-instrument support
 
 // Instrument definitions with Tone.js synth configurations
+// Base URL for instrument samples
+// Using the excellent collection from nbrosowsky/tonejs-instruments
+const SAMPLE_BASE_URL = "https://raw.githubusercontent.com/nbrosowsky/tonejs-instruments/master/samples/";
+
 const INSTRUMENTS = {
     0: {  // Piano
         name: 'piano',
-        create: () => new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: 'triangle' },
-            envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 0.8 }
+        create: () => new Tone.Sampler({
+            urls: {
+                "A1": "A1.mp3", "A2": "A2.mp3", "A3": "A3.mp3", "A4": "A4.mp3", "A5": "A5.mp3", "A6": "A6.mp3", "A7": "A7.mp3",
+                "C1": "C1.mp3", "C2": "C2.mp3", "C3": "C3.mp3", "C4": "C4.mp3", "C5": "C5.mp3", "C6": "C6.mp3", "C7": "C7.mp3",
+                "D#1": "Ds1.mp3", "D#2": "Ds2.mp3", "D#3": "Ds3.mp3", "D#4": "Ds4.mp3", "D#5": "Ds5.mp3", "D#6": "Ds6.mp3", "D#7": "Ds7.mp3",
+                "F#1": "Fs1.mp3", "F#2": "Fs2.mp3", "F#3": "Fs3.mp3", "F#4": "Fs4.mp3", "F#5": "Fs5.mp3", "F#6": "Fs6.mp3", "F#7": "Fs7.mp3"
+            },
+            release: 1,
+            baseUrl: SAMPLE_BASE_URL + "piano/"
         }),
-        volume: -6
+        volume: -5
     },
     1: {  // Bass
         name: 'bass',
-        create: () => new Tone.MonoSynth({
-            oscillator: { type: 'sawtooth' },
-            envelope: { attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.4 },
-            filterEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.4, baseFrequency: 200, octaves: 2 }
+        create: () => new Tone.Sampler({
+            urls: {
+                "A#1": "As1.mp3", "A#2": "As2.mp3", "A#3": "As3.mp3", "A#4": "As4.mp3",
+                "C#1": "Cs1.mp3", "C#2": "Cs2.mp3", "C#3": "Cs3.mp3", "C#4": "Cs4.mp3",
+                "E1": "E1.mp3", "E2": "E2.mp3", "E3": "E3.mp3", "E4": "E4.mp3",
+                "G1": "G1.mp3", "G2": "G2.mp3", "G3": "G3.mp3", "G4": "G4.mp3"
+            },
+            release: 1,
+            baseUrl: SAMPLE_BASE_URL + "bass-electric/"
         }),
         volume: -3
     },
-    2: {  // Strings
+    2: {  // Strings (Violin)
         name: 'strings',
-        create: () => new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: 'sine' },
-            envelope: { attack: 0.3, decay: 0.5, sustain: 0.7, release: 1.2 }
+        create: () => new Tone.Sampler({
+            urls: {
+                "A3": "A3.mp3", "A4": "A4.mp3", "A5": "A5.mp3", "A6": "A6.mp3",
+                "C4": "C4.mp3", "C5": "C5.mp3", "C6": "C6.mp3", "C7": "C7.mp3",
+                "E4": "E4.mp3", "E5": "E5.mp3", "E6": "E6.mp3",
+                "G4": "G4.mp3", "G5": "G5.mp3", "G6": "G6.mp3"
+            },
+            release: 1,
+            baseUrl: SAMPLE_BASE_URL + "violin/"
+        }),
+        volume: -6
+    },
+    3: {  // Lead (Saxophone)
+        name: 'lead',
+        create: () => new Tone.Sampler({
+            urls: {
+                "D#5": "Ds5.mp3", "E3": "E3.mp3", "E4": "E4.mp3", "E5": "E5.mp3",
+                "F3": "F3.mp3", "F4": "F4.mp3", "F5": "F5.mp3", "F#3": "Fs3.mp3", "F#4": "Fs4.mp3", "F#5": "Fs5.mp3",
+                "G3": "G3.mp3", "G4": "G4.mp3", "G5": "G5.mp3", "A4": "A4.mp3", "A5": "A5.mp3",
+                "C4": "C4.mp3", "C5": "C5.mp3", "D3": "D3.mp3", "D4": "D4.mp3", "D5": "D5.mp3"
+            },
+            release: 1,
+            baseUrl: SAMPLE_BASE_URL + "saxophone/"
+        }),
+        volume: -5
+    },
+    4: {  // Pad (Harmonium)
+        name: 'pad',
+        create: () => new Tone.Sampler({
+            urls: {
+                "C2": "C2.mp3", "C3": "C3.mp3", "C4": "C4.mp3", "C5": "C5.mp3",
+                "D#2": "Ds2.mp3", "D#3": "Ds3.mp3", "D#4": "Ds4.mp3",
+                "F#2": "Fs2.mp3", "F#3": "Fs3.mp3", "A2": "A2.mp3", "A3": "A3.mp3", "A4": "A4.mp3"
+            },
+            release: 1,
+            baseUrl: SAMPLE_BASE_URL + "harmonium/"
         }),
         volume: -8
     },
-    3: {  // Lead
-        name: 'lead',
-        create: () => new Tone.MonoSynth({
-            oscillator: { type: 'square' },
-            envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 },
-            filterEnvelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.3, baseFrequency: 800, octaves: 3 }
-        }),
-        volume: -6
-    },
-    4: {  // Pad
-        name: 'pad',
-        create: () => new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: 'sine' },
-            envelope: { attack: 0.8, decay: 1.0, sustain: 0.9, release: 2.0 }
-        }),
-        volume: -10
-    },
-    5: {  // Pluck
+    5: {  // Pluck (Guitar Acoustic)
         name: 'pluck',
-        create: () => new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: 'triangle' },
-            envelope: { attack: 0.001, decay: 0.2, sustain: 0.1, release: 0.3 }
+        create: () => new Tone.Sampler({
+            urls: {
+                "F4": "F4.mp3", "F#2": "Fs2.mp3", "F#3": "Fs3.mp3", "F#4": "Fs4.mp3",
+                "G2": "G2.mp3", "G3": "G3.mp3", "G4": "G4.mp3",
+                "A2": "A2.mp3", "A3": "A3.mp3", "A4": "A4.mp3",
+                "C3": "C3.mp3", "C4": "C4.mp3", "C5": "C5.mp3",
+                "D2": "D2.mp3", "D3": "D3.mp3", "D4": "D4.mp3",
+                "E2": "E2.mp3", "E3": "E3.mp3", "E4": "E4.mp3"
+            },
+            release: 1,
+            baseUrl: SAMPLE_BASE_URL + "guitar-acoustic/"
         }),
-        volume: -6
+        volume: -5
     },
     6: {  // Organ
         name: 'organ',
-        create: () => new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: 'sine', partialCount: 4, partials: [1, 0.5, 0.25, 0.125] },
-            envelope: { attack: 0.05, decay: 0.1, sustain: 0.9, release: 0.5 }
+        create: () => new Tone.Sampler({
+            urls: {
+                "C3": "C3.mp3", "C4": "C4.mp3", "C5": "C5.mp3", "C6": "C6.mp3",
+                "D#1": "Ds1.mp3", "D#2": "Ds2.mp3", "D#3": "Ds3.mp3", "D#4": "Ds4.mp3", "D#5": "Ds5.mp3",
+                "F#1": "Fs1.mp3", "F#2": "Fs2.mp3", "F#3": "Fs3.mp3", "F#4": "Fs4.mp3", "F#5": "Fs5.mp3",
+                "A1": "A1.mp3", "A2": "A2.mp3", "A3": "A3.mp3", "A4": "A4.mp3", "A5": "A5.mp3"
+            },
+            release: 1,
+            baseUrl: SAMPLE_BASE_URL + "organ/"
         }),
-        volume: -8
+        volume: -6
     },
-    7: {  // Drums
+    7: {  // Drums - Revert to Synth as no good samples found
         name: 'drums',
         create: () => new Tone.MembraneSynth({
             pitchDecay: 0.05,
@@ -68,7 +113,7 @@ const INSTRUMENTS = {
             oscillator: { type: 'sine' },
             envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.4 }
         }),
-        volume: -4
+        volume: -2
     }
 };
 
@@ -92,15 +137,36 @@ class AudioPlayer {
     async init() {
         if (this.initialized) return;
 
+        // Initialize global reverb
+        if (!this.reverb) {
+            this.reverb = new Tone.Reverb({
+                decay: 2.5,
+                wet: 0.2
+            }).toDestination();
+            await this.reverb.generate();
+        }
+
+        // Initialize compressor for master mix glue
+        if (!this.compressor) {
+            this.compressor = new Tone.Compressor({
+                threshold: -10,
+                ratio: 4,
+                attack: 0.01,
+                release: 0.2
+            }).connect(this.reverb);
+        }
+
         // Create all instrument synths (use numeric keys)
         for (let id = 0; id <= 7; id++) {
             const config = INSTRUMENTS[id];
             const synth = config.create();
             synth.volume.value = config.volume;
-            synth.toDestination();
+            // Connect to compressor for mix control, passing through reverb
+            synth.connect(this.compressor);
             this.synths[id] = synth;
         }
 
+        await Tone.loaded();
         this.initialized = true;
     }
 
@@ -146,6 +212,8 @@ class AudioPlayer {
         if (this.autoPlay && !this.isPlaying && this.scheduledNotes.size === 1) {
             this.play();
         }
+
+        this.syncLoopPoints();
     }
 
     async play() {
@@ -163,6 +231,9 @@ class AudioPlayer {
         this.isPlaying = false;
         Tone.Transport.pause();
         this.stopTimeAnimation();
+        if (this.onTimeUpdate) {
+            this.onTimeUpdate(this.getCurrentTime(), this.getTotalDuration());
+        }
         if (this.onPlayStateChange) {
             this.onPlayStateChange(false);
         }
@@ -171,10 +242,13 @@ class AudioPlayer {
     stop() {
         this.isPlaying = false;
         Tone.Transport.stop();
-        Tone.Transport.position = 0;
+        Tone.Transport.seconds = 0;
         this.stopTimeAnimation();
         if (this.onPlayStateChange) {
             this.onPlayStateChange(false);
+        }
+        if (this.onTimeUpdate) {
+            this.onTimeUpdate(0, this.getTotalDuration());
         }
     }
 
@@ -184,6 +258,7 @@ class AudioPlayer {
         this.scheduledNotes.clear();
         this.notes = [];
         this.startOffset = 0;
+        Tone.Transport.loop = false;
     }
 
     finalize() {
@@ -200,6 +275,7 @@ class AudioPlayer {
 
     setLoop(enabled) {
         this.isLooping = enabled;
+        this.syncLoopPoints();
     }
 
     setTempo(bpm) {
@@ -207,7 +283,31 @@ class AudioPlayer {
     }
 
     startTimeAnimation() {
-        // Animation is handled by PianoRoll
+        this.stopTimeAnimation();
+        if (this.onTimeUpdate) {
+            this.onTimeUpdate(this.getCurrentTime(), this.getTotalDuration());
+        }
+        const tick = () => {
+            const current = this.getCurrentTime();
+            const total = this.getTotalDuration();
+
+            if (!this.isLooping && total > 0 && current >= total - 5) {
+                // Snap to end and pause transport so the playhead stops at song end
+                this.stopTimeAnimation();
+                Tone.Transport.pause();
+                Tone.Transport.seconds = total / 1000;
+                this.isPlaying = false;
+                if (this.onTimeUpdate) this.onTimeUpdate(total, total);
+                if (this.onPlayStateChange) this.onPlayStateChange(false);
+                return;
+            }
+
+            if (this.onTimeUpdate) {
+                this.onTimeUpdate(current, total);
+            }
+            this.animationId = requestAnimationFrame(tick);
+        };
+        this.animationId = requestAnimationFrame(tick);
     }
 
     getCurrentTime() {
@@ -250,5 +350,15 @@ class AudioPlayer {
     // Get notes for export
     getNotes() {
         return [...this.notes];
+    }
+
+    syncLoopPoints() {
+        const totalSeconds = this.getTotalDuration() / 1000;
+        const shouldLoop = this.isLooping && totalSeconds > 0;
+        Tone.Transport.loop = shouldLoop;
+        if (shouldLoop) {
+            Tone.Transport.loopStart = 0;
+            Tone.Transport.loopEnd = totalSeconds;
+        }
     }
 }
