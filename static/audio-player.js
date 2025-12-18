@@ -1,14 +1,14 @@
 // Progressive MIDI playback using smplr for high-quality instruments
 
-// Instrument configurations mapping instrument IDs to smplr instruments
+// Instrument configurations mapping instrument IDs to smplr instruments (rock/techno)
 const INSTRUMENT_CONFIGS = {
-    0: { type: 'piano', name: 'Splendid Grand Piano', volume: 0.8 },
-    1: { type: 'soundfont', instrument: 'electric_bass_finger', name: 'Electric Bass', volume: 0.9 },
-    2: { type: 'soundfont', instrument: 'string_ensemble_1', name: 'Strings', volume: 0.7 },
-    3: { type: 'soundfont', instrument: 'alto_sax', name: 'Alto Sax', volume: 0.75 },
-    4: { type: 'soundfont', instrument: 'pad_2_warm', name: 'Warm Pad', volume: 0.6 },
-    5: { type: 'soundfont', instrument: 'acoustic_guitar_nylon', name: 'Nylon Guitar', volume: 0.8 },
-    6: { type: 'soundfont', instrument: 'church_organ', name: 'Church Organ', volume: 0.7 },
+    0: { type: 'soundfont', instrument: 'lead_2_sawtooth', name: 'Saw Lead', volume: 0.75 },
+    1: { type: 'soundfont', instrument: 'synth_bass_1', name: 'Synth Bass', volume: 0.9 },
+    2: { type: 'soundfont', instrument: 'synth_strings_1', name: 'Synth Strings', volume: 0.7 },
+    3: { type: 'soundfont', instrument: 'lead_1_square', name: 'Square Lead', volume: 0.7 },
+    4: { type: 'soundfont', instrument: 'pad_3_polysynth', name: 'Polysynth Pad', volume: 0.6 },
+    5: { type: 'soundfont', instrument: 'distortion_guitar', name: 'Distortion Guitar', volume: 0.8 },
+    6: { type: 'soundfont', instrument: 'rock_organ', name: 'Rock Organ', volume: 0.7 },
     7: { type: 'drums', name: 'Drums', volume: 0.85 }
 };
 
@@ -18,8 +18,8 @@ const DRUM_NOTE_MAP = {
     38: 'snare', 40: 'snare',
     37: 'snare',  // side stick -> snare
     39: 'clap',
-    42: 'hihat', 44: 'hihat', 46: 'hihat-open',
-    41: 'tom1', 43: 'tom1', 45: 'tom2', 47: 'tom2', 48: 'tom3', 50: 'tom3',
+    42: 'hh', 44: 'hh', 46: 'hh-open',
+    41: 'tom-1', 43: 'tom-1', 45: 'tom-2', 47: 'tom-2', 48: 'tom-3', 50: 'tom-3',
     49: 'crash', 57: 'crash',
     51: 'ride', 59: 'ride', 53: 'ride',
     56: 'cowbell',
