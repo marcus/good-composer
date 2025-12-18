@@ -1,0 +1,435 @@
+/* Good Composer - CSS Styles */
+
+:root {
+    --bg-primary: #0f0f1a;
+    --bg-secondary: #1a1a2e;
+    --bg-tertiary: #2d2d44;
+    --text-primary: #e8e8e8;
+    --text-secondary: #a0a0b0;
+    --accent: #4ecdc4;
+    --accent-hover: #45b7aa;
+    --accent-active: #ff6b6b;
+    --error: #ff6b6b;
+    --border: #3d3d5c;
+    --shadow: rgba(0, 0, 0, 0.3);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+/* Piano Roll Container */
+.piano-roll-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px var(--shadow);
+}
+
+.piano-roll-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#playhead {
+    pointer-events: none;
+}
+
+#loading-canvas {
+    z-index: 10;
+    background: rgba(26, 26, 46, 0.9);
+}
+
+.thinking-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    background: linear-gradient(to bottom, rgba(26, 26, 46, 0.95), rgba(26, 26, 46, 0.7));
+    z-index: 5;
+}
+
+.thinking-overlay.visible {
+    opacity: 1;
+}
+
+.thinking-overlay.fade-out {
+    opacity: 0;
+}
+
+/* Transport Controls */
+.transport {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.transport-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.transport-btn:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+
+.transport-btn:active {
+    transform: scale(0.95);
+}
+
+.time-display {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    min-width: 100px;
+}
+
+.tempo-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.tempo-control input[type="range"] {
+    width: 100px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.tempo-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.tempo-control span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    min-width: 60px;
+}
+
+.auto-play-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.auto-play-toggle input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.input-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-container input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.input-container input:focus {
+    border-color: var(--accent);
+}
+
+.input-container input::placeholder {
+    color: var(--text-secondary);
+}
+
+.clear-btn {
+    position: absolute;
+    right: 0.5rem;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+    background: var(--error);
+    color: white;
+}
+
+.clear-btn.hidden {
+    display: none;
+}
+
+.refine-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.refine-btn:not(:disabled):hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.refine-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.refine-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-primary);
+}
+
+.model-select {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    min-width: 150px;
+}
+
+.model-select:focus {
+    border-color: var(--accent);
+}
+
+.status {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    min-height: 1.2rem;
+    text-align: center;
+}
+
+.status.error {
+    color: var(--error);
+}
+
+/* Gallery */
+.gallery-wrapper {
+    padding: 0.5rem 0;
+}
+
+.gallery-wrapper.empty {
+    display: none;
+}
+
+.gallery-scroll {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.5rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-tertiary) transparent;
+}
+
+.gallery-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.gallery-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.gallery-scroll::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+}
+
+.gallery-item {
+    flex-shrink: 0;
+    width: 120px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    scroll-snap-align: start;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.gallery-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.gallery-item.active {
+    border-color: var(--accent-active);
+}
+
+.gallery-thumb {
+    width: 100%;
+    height: 50px;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gallery-thumb canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.gallery-meta {
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.gallery-prompt {
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gallery-model {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .piano-roll-container {
+        aspect-ratio: 3 / 2;
+    }
+
+    .transport {
+        justify-content: center;
+    }
+
+    .tempo-control {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .input-row {
+        flex-wrap: wrap;
+    }
+
+    .input-container {
+        width: 100%;
+    }
+
+    .model-select {
+        flex: 1;
+    }
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Good Composer</title>
+    <link rel="stylesheet" href="/static/styles.css?v=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+</head>
+
+<body>
+    <main class="container">
+        <div class="piano-roll-container" id="piano-roll-container">
+            <canvas id="piano-roll"></canvas>
+            <canvas id="playhead"></canvas>
+            <canvas id="loading-canvas" style="display: none;"></canvas>
+            <div id="thinking-overlay" class="thinking-overlay"></div>
+        </div>
+
+        <div class="transport" id="transport">
+            <button id="play-pause" class="transport-btn" aria-label="Play/Pause">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <polygon points="5,3 19,12 5,21" fill="currentColor" />
+                </svg>
+            </button>
+            <button id="stop" class="transport-btn" aria-label="Stop">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <rect x="4" y="4" width="16" height="16" fill="currentColor" />
+                </svg>
+            </button>
+            <span id="time-display" class="time-display">0:00 / 0:00</span>
+            <div class="tempo-control">
+                <input id="tempo" type="range" min="60" max="180" value="120" aria-label="Tempo">
+                <span id="tempo-display">120 BPM</span>
+            </div>
+            <label class="auto-play-toggle">
+                <input type="checkbox" id="auto-play" checked>
+                <span>Auto-play</span>
+            </label>
+        </div>
+
+        <div class="controls" id="controls">
+            <div class="input-row">
+                <div class="input-container">
+                    <input type="text" id="prompt" placeholder="Describe your music..." autocomplete="off" autofocus
+                        aria-label="Music prompt" maxlength="512">
+                    <button id="clear-btn" class="clear-btn hidden" aria-label="Clear input">&times;</button>
+                </div>
+                <button id="refine-btn" class="refine-btn" disabled aria-label="Refine composition"
+                    title="Add to current composition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14" />
+                        <path d="M5 12h14" />
+                    </svg>
+                </button>
+                <select id="model-select" class="model-select" aria-label="Select model">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div id="status" class="status" aria-live="polite"></div>
+        </div>
+
+        <div class="gallery-wrapper empty" id="gallery-wrapper">
+            <div class="gallery-scroll" id="gallery-scroll"></div>
+        </div>
+    </main>
+
+    <script src="/static/midi-parser.js?v=1"></script>
+    <script src="/static/audio-player.js?v=1"></script>
+    <script src="/static/piano-roll.js?v=1"></script>
+    <script src="/static/loading-anim.js?v=1"></script>
+    <script src="/static/app.js?v=1"></script>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+[project]
+name = "good-composer"
+version = "0.1.0"
+description = "Real-time AI MIDI generation with streaming playback"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "websockets>=12.0",
+    "litellm>=1.79.3",
+    "httpx>=0.25.0",
+]
