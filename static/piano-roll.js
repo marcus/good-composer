@@ -1,11 +1,12 @@
 // Canvas visualization of MIDI notes - horizontal piano roll
 
 class PianoRoll {
-    constructor(canvas, playheadCanvas) {
+    constructor(canvas, playheadCanvas, onSeek = null) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.playheadCanvas = playheadCanvas;
         this.playheadCtx = playheadCanvas.getContext('2d');
+        this.onSeek = onSeek;
 
         this.notes = [];
         this.activeNotes = new Set();
@@ -30,6 +31,8 @@ class PianoRoll {
         };
 
         this.resize();
+        this.initInteraction();
+        this.drawPlayhead(0);
     }
 
     resize() {
@@ -56,6 +59,7 @@ class PianoRoll {
         this.noteHeight = this.displayHeight / (this.noteRange.max - this.noteRange.min);
 
         this.render();
+        this.drawPlayhead(this.playheadTime || 0);
     }
 
     addNote(note) {
@@ -277,5 +281,49 @@ class PianoRoll {
     scrollTo(timeMs) {
         this.viewStart = Math.max(0, timeMs - this.viewDuration * 0.2);
         this.render();
+    }
+
+    initInteraction() {
+        if (!this.onSeek) return;
+
+        let isDragging = false;
+
+        const handleSeek = (e) => {
+            const rect = this.playheadCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const time = this.xToTime(x);
+            if (time >= 0) {
+                this.onSeek(Math.max(0, time));
+            }
+        };
+
+        const onDown = (e) => {
+            isDragging = true;
+            handleSeek(e);
+            this.playheadCanvas.setPointerCapture(e.pointerId);
+        };
+
+        const onMove = (e) => {
+            if (isDragging) {
+                handleSeek(e);
+            }
+        };
+
+        const onUp = (e) => {
+            isDragging = false;
+            this.playheadCanvas.releasePointerCapture(e.pointerId);
+        };
+
+        this.playheadCanvas.addEventListener('pointerdown', onDown);
+        this.playheadCanvas.addEventListener('pointermove', onMove);
+        this.playheadCanvas.addEventListener('pointerup', onUp);
+        // Also handle pointer cancel/leave as up to clear state
+        this.playheadCanvas.addEventListener('pointercancel', onUp);
+    }
+
+    xToTime(x) {
+        const effectiveWidth = Math.max(1, this.noteAreaWidth);
+        const ratio = (x - this.keyWidth) / effectiveWidth;
+        return this.viewStart + ratio * this.viewDuration;
     }
 }

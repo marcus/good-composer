@@ -7,6 +7,7 @@ class AudioPlayer {
         this.notes = [];
         this.isPlaying = false;
         this.autoPlay = true;
+        this.isLooping = false;
         this.startOffset = 0;
         this.onNoteStart = null;
         this.onNoteEnd = null;
@@ -116,7 +117,10 @@ class AudioPlayer {
     }
 
     getCurrentTime() {
-        return Tone.Transport.seconds * 1000;
+        // Compensate for lookahead latency to match visual playhead with audible sound
+        const lookAhead = Tone.context ? (Tone.context.lookAhead || 0) : 0;
+        const time = Math.max(0, (Tone.Transport.seconds - lookAhead) * 1000);
+        return isNaN(time) ? 0 : time;
     }
 
     getTotalDuration() {
@@ -132,21 +136,9 @@ class AudioPlayer {
     seek(timeMs) {
         const wasPlaying = this.isPlaying;
         Tone.Transport.seconds = timeMs / 1000;
-        if (wasPlaying) {
-            this.play();
+        if (wasPlaying && Tone.Transport.state !== 'started') {
+            Tone.Transport.start();
         }
-    }
-
-    startTimeAnimation() {
-        const animate = () => {
-            if (this.onTimeUpdate) {
-                this.onTimeUpdate(this.getCurrentTime(), this.getTotalDuration());
-            }
-            if (this.isPlaying) {
-                this.animationId = requestAnimationFrame(animate);
-            }
-        };
-        animate();
     }
 
     stopTimeAnimation() {

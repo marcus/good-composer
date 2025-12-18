@@ -53,7 +53,14 @@ class ComposerApp {
         this.elapsedTimer = null;
 
         // Initialize components
-        this.pianoRoll = new PianoRoll(this.pianoRollCanvas, this.playheadCanvas);
+        this.pianoRoll = new PianoRoll(
+            this.pianoRollCanvas,
+            this.playheadCanvas,
+            (time) => {
+                this.player.seek(time);
+                this.pianoRoll.drawPlayhead(time);
+            }
+        );
         this.player = new AudioPlayer();
         this.parser = new MidiParser(
             (note) => this.onNote(note),
@@ -79,6 +86,11 @@ class ComposerApp {
         // Transport handlers
         this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
         this.stopBtn.addEventListener('click', () => this.stopPlayback());
+        document.getElementById('loop-btn').addEventListener('click', (e) => {
+            const btn = e.currentTarget;
+            const isLooping = btn.classList.toggle('active');
+            this.player.setLoop(isLooping);
+        });
         this.tempoSlider.addEventListener('input', () => this.updateTempo());
         this.autoPlayCheckbox.addEventListener('change', () => {
             this.player.setAutoPlay(this.autoPlayCheckbox.checked);

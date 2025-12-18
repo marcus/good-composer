@@ -59,7 +59,8 @@ body {
 }
 
 #playhead {
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 #loading-canvas {
@@ -123,8 +124,10 @@ body {
     color: var(--bg-primary);
 }
 
-.transport-btn:active {
-    transform: scale(0.95);
+.transport-btn:active,
+.transport-btn.active {
+    background: var(--accent);
+    color: var(--bg-primary);
 }
 
 .time-display {
@@ -203,10 +206,11 @@ body {
 
 .input-container input {
     width: 100%;
-    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    height: 3.5rem;
+    padding: 0 3rem 0 1.25rem;
     font-size: 1rem;
     border: 2px solid var(--border);
-    border-radius: 8px;
+    border-radius: 20px;
     background: var(--bg-secondary);
     color: var(--text-primary);
     outline: none;
@@ -224,13 +228,13 @@ body {
 .clear-btn {
     position: absolute;
     right: 0.5rem;
-    width: 28px;
-    height: 28px;
+    width: 2rem;
+    height: 2rem;
     border: none;
     border-radius: 50%;
-    background: var(--bg-tertiary);
+    background: transparent;
     color: var(--text-secondary);
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -239,8 +243,8 @@ body {
 }
 
 .clear-btn:hover {
-    background: var(--error);
-    color: white;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .clear-btn.hidden {
@@ -248,10 +252,10 @@ body {
 }
 
 .refine-btn {
-    width: 40px;
-    height: 40px;
+    width: 3.5rem;
+    height: 3.5rem;
     border: 2px solid var(--border);
-    border-radius: 8px;
+    border-radius: 20px;
     background: var(--bg-secondary);
     color: var(--text-secondary);
     cursor: pointer;
@@ -259,6 +263,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .refine-btn:not(:disabled):hover {
@@ -278,15 +283,22 @@ body {
 }
 
 .model-select {
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
+    height: 3.5rem;
+    padding: 0 2.5rem 0 1rem;
+    font-size: 0.875rem;
     border: 2px solid var(--border);
-    border-radius: 8px;
+    border-radius: 20px;
     background: var(--bg-secondary);
     color: var(--text-primary);
     cursor: pointer;
     outline: none;
     min-width: 150px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0a0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
 }
 
 .model-select:focus {
@@ -426,9 +438,12 @@ body {
 
 /* Animations */
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.6;
     }
+
     50% {
         opacity: 1;
     }
