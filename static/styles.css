@@ -1,17 +1,21 @@
 /* Good Composer - CSS Styles */
 
 :root {
-    --bg-primary: #0f0f1a;
-    --bg-secondary: #1a1a2e;
-    --bg-tertiary: #2d2d44;
-    --text-primary: #e8e8e8;
-    --text-secondary: #a0a0b0;
-    --accent: #4ecdc4;
-    --accent-hover: #45b7aa;
-    --accent-active: #ff6b6b;
-    --error: #ff6b6b;
-    --border: #3d3d5c;
-    --shadow: rgba(0, 0, 0, 0.3);
+    --bg-primary: #1e1e1e;
+    /* Logic main window background */
+    --bg-secondary: #282828;
+    /* Logic darker areas */
+    --bg-tertiary: #383838;
+    /* Logic lighter interactive areas */
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --accent: #3498db;
+    /* Logic selection blue */
+    --accent-hover: #4ea8e5;
+    --accent-active: #2980b9;
+    --error: #e74c3c;
+    --border: #151515;
+    --shadow: rgba(0, 0, 0, 0.5);
 }
 
 * {

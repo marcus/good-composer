@@ -71,7 +71,7 @@ class MusicLoader {
         const radius = 25 + Math.sin(t * 4) * 5;
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(78, 205, 196, 0.4)`;
+        ctx.strokeStyle = `rgba(52, 152, 219, 0.4)`; // Selection blue
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -79,7 +79,7 @@ class MusicLoader {
         const innerRadius = 15 + Math.sin(t * 4 + Math.PI) * 3;
         ctx.beginPath();
         ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(78, 205, 196, 0.2)`;
+        ctx.fillStyle = `rgba(52, 152, 219, 0.2)`;
         ctx.fill();
 
         // Sound wave rings
@@ -90,7 +90,7 @@ class MusicLoader {
 
             ctx.beginPath();
             ctx.arc(centerX, centerY, waveRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(78, 205, 196, ${waveOpacity})`;
+            ctx.strokeStyle = `rgba(224, 224, 224, ${waveOpacity})`; // text-primary
             ctx.lineWidth = 1.5;
             ctx.stroke();
         }
@@ -107,7 +107,7 @@ class MusicLoader {
         ctx.translate(x, y);
         ctx.scale(scale, scale);
 
-        const colors = ['#4ecdc4', '#ff6b6b', '#ffd93d', '#6bcb77', '#9b5de5', '#f72585'];
+        const colors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b5de5'];
         ctx.fillStyle = `rgba(${this.hexToRgb(colors[index % colors.length])}, ${opacity})`;
         ctx.strokeStyle = `rgba(${this.hexToRgb(colors[index % colors.length])}, ${opacity})`;
 

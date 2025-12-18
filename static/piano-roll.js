@@ -17,17 +17,17 @@ class PianoRoll {
         this.animationId = null;
         this.playheadTime = 0;
 
-        // Colors
+        // Colors (Logic Pro X inspired)
         this.colors = {
-            background: '#1a1a2e',
-            grid: '#2d2d44',
-            gridLight: '#3d3d5c',
-            note: '#4ecdc4',
-            noteActive: '#ff6b6b',
-            noteBorder: '#2a9d8f',
-            playhead: '#ff6b6b',
-            keyWhite: '#e8e8e8',
-            keyBlack: '#2d2d44'
+            background: '#1e1e1e',
+            grid: '#2d2d2d',
+            gridLight: '#3d3d3d',
+            note: '#2980b9', // Default blue
+            noteActive: '#ffffff',
+            noteBorder: 'rgba(0,0,0,0.3)',
+            playhead: '#ffffff',
+            keyWhite: '#b0b0b0',
+            keyBlack: '#1a1a1a'
         };
 
         // Instrument color palette (HSL hues)
@@ -171,19 +171,27 @@ class PianoRoll {
 
         const ctx = this.ctx;
 
-        // Color based on instrument, with velocity affecting saturation
-        const instrumentId = note.i ?? 0;
-        const instrumentColor = this.instrumentColors[instrumentId] || this.instrumentColors[0];
-        const hue = instrumentColor.hue;
-        const saturation = 50 + (note.v / 127) * 30;
-        const lightness = isActive ? 60 : 45;
+        // Logic Pro Velocity Scaling (Red -> Orange -> Yellow -> Green -> Blue)
+        let fillStyle;
+        if (isActive) {
+            fillStyle = this.colors.noteActive;
+        } else {
+            const v = note.v || 80;
+            if (v >= 100) {
+                fillStyle = `hsl(${0 + (127 - v) * 0.5}, 80%, 50%)`; // Red to Orange
+            } else if (v >= 60) {
+                fillStyle = `hsl(${40 + (100 - v) * 1.5}, 70%, 50%)`; // Orange to Green
+            } else {
+                fillStyle = `hsl(${120 + (60 - v) * 1.5}, 60%, 50%)`; // Green to Blue
+            }
+        }
 
-        ctx.fillStyle = isActive ? this.colors.noteActive : `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        ctx.fillStyle = fillStyle;
         ctx.fillRect(Math.max(x, this.keyWidth), y, width, height);
 
-        // Border
-        ctx.strokeStyle = isActive ? '#fff' : `hsl(${hue}, ${saturation - 20}%, ${lightness - 10}%)`;
-        ctx.lineWidth = isActive ? 2 : 1;
+        // Border (subtle inner border)
+        ctx.strokeStyle = isActive ? '#000' : 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = isActive ? 1 : 0.5;
         ctx.strokeRect(Math.max(x, this.keyWidth), y, width, height);
     }
 
@@ -196,19 +204,21 @@ class PianoRoll {
 
         if (x < this.keyWidth || x > this.displayWidth) return;
 
-        ctx.strokeStyle = this.colors.playhead;
-        ctx.lineWidth = 2;
+        // Line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, this.displayHeight);
         ctx.stroke();
 
-        // Playhead triangle
-        ctx.fillStyle = this.colors.playhead;
+        // Playhead triangle (Logic style)
+        ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.moveTo(x - 6, 0);
-        ctx.lineTo(x + 6, 0);
-        ctx.lineTo(x, 10);
+        ctx.moveTo(x - 8, 0);
+        ctx.lineTo(x + 8, 0);
+        ctx.lineTo(x, 12);
         ctx.closePath();
         ctx.fill();
     }
