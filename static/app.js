@@ -72,6 +72,14 @@ class ComposerApp {
         this.player.onNoteStart = (note) => this.pianoRoll.setActiveNote(note, true);
         this.player.onNoteEnd = (note) => this.pianoRoll.setActiveNote(note, false);
         this.player.onTimeUpdate = (current, total) => this.updateTimeDisplay(current, total);
+        this.player.onPlayStateChange = (isPlaying) => {
+            if (isPlaying) {
+                this.pianoRoll.startAnimation(() => this.player.getCurrentTime());
+            } else {
+                this.pianoRoll.stopAnimation();
+            }
+            this.updatePlayPauseButton();
+        };
 
         this.init();
     }
@@ -505,16 +513,19 @@ class ComposerApp {
     }
 
     // Transport controls
-    togglePlayPause() {
-        if (this.player.isPlaying) {
-            this.player.pause();
-            this.pianoRoll.stopAnimation();
-        } else {
-            this.player.play();
-            // Restart piano roll animation when playing
-            this.pianoRoll.startAnimation(() => this.player.getCurrentTime());
+    async togglePlayPause() {
+        try {
+            if (this.player.isPlaying) {
+                this.player.pause();
+            } else {
+                await this.player.play();
+            }
+        } catch (e) {
+            console.error('Failed to toggle playback', e);
+            this.setStatus('Unable to start playback', true);
+        } finally {
+            this.updatePlayPauseButton();
         }
-        this.updatePlayPauseButton();
     }
 
     stopPlayback() {

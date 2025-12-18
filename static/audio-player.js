@@ -84,6 +84,7 @@ class AudioPlayer {
         this.onNoteStart = null;
         this.onNoteEnd = null;
         this.onTimeUpdate = null;
+        this.onPlayStateChange = null;
         this.animationId = null;
         this.initialized = false;
     }
@@ -152,6 +153,9 @@ class AudioPlayer {
         await Tone.start();
         this.isPlaying = true;
         Tone.Transport.start();
+        if (this.onPlayStateChange) {
+            this.onPlayStateChange(true);
+        }
         this.startTimeAnimation();
     }
 
@@ -159,6 +163,9 @@ class AudioPlayer {
         this.isPlaying = false;
         Tone.Transport.pause();
         this.stopTimeAnimation();
+        if (this.onPlayStateChange) {
+            this.onPlayStateChange(false);
+        }
     }
 
     stop() {
@@ -166,6 +173,9 @@ class AudioPlayer {
         Tone.Transport.stop();
         Tone.Transport.position = 0;
         this.stopTimeAnimation();
+        if (this.onPlayStateChange) {
+            this.onPlayStateChange(false);
+        }
     }
 
     clear() {

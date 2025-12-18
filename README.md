@@ -5,13 +5,6 @@ THE WORLD'S MOST AMAZING AI MUSICIAN!!!
   <img src="static/screenshot-01.png" width="800" alt="Good Composer">
 </p>
 
-## LISTEN TO THIS INCREDIBLE MUSIC!!!
-
-<p align="center">
-  <img src="static/examples/example1.png" width="400" alt="Amazing AI Music Example 1">
-  <img src="static/examples/example2.png" width="400" alt="Amazing AI Music Example 2">
-</p>
-
 ## WHAT IS THIS SONIC MASTERPIECE?
 
 YOU TYPE WORDS AND IT MAKES MUSIC!!! 🎵✨🚀

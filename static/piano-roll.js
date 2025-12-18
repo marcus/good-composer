@@ -59,6 +59,9 @@ class PianoRoll {
         this.playheadCanvas.width = this.width;
         this.playheadCanvas.height = this.height;
 
+        // Reset transforms before scaling to avoid compounding on repeated resizes
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.playheadCtx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.scale(dpr, dpr);
         this.playheadCtx.scale(dpr, dpr);
 
@@ -194,14 +197,21 @@ class PianoRoll {
         ctx.strokeRect(Math.max(x, this.keyWidth), y, width, height);
     }
 
-    drawPlayhead(currentTime) {
+    drawPlayhead(currentTime, { ensureVisible = true } = {}) {
+        const safeTime = this.normalizeTime(currentTime);
+        if (ensureVisible) {
+            this.ensureTimeVisible(safeTime);
+        }
+
         const ctx = this.playheadCtx;
         ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
 
-        this.playheadTime = currentTime;
-        const x = this.timeToX(currentTime);
+        this.playheadTime = safeTime;
+        let x = this.timeToX(safeTime);
 
-        if (x < this.keyWidth || x > this.displayWidth) return;
+        // If time is still outside the viewport, pin the indicator to the nearest edge
+        if (x < this.keyWidth) x = this.keyWidth;
+        if (x > this.displayWidth) x = this.displayWidth;
 
         // Line
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
@@ -227,9 +237,8 @@ class PianoRoll {
         this.stopAnimation();
 
         const animate = () => {
-            const time = getTime();
-            this.autoScroll(time);
-            this.drawPlayhead(time);
+            const time = this.normalizeTime(getTime ? getTime() : 0);
+            this.drawPlayhead(time, { ensureVisible: true });
             this.animationId = requestAnimationFrame(animate);
         };
         animate();
@@ -242,25 +251,11 @@ class PianoRoll {
         }
     }
 
-    autoScroll(currentTime) {
-        // Keep playhead visible
-        const playheadX = this.timeToX(currentTime);
-        const rightEdge = this.displayWidth * 0.8;
-        const leftEdge = this.keyWidth + this.displayWidth * 0.2;
-
-        if (playheadX > rightEdge) {
-            this.viewStart = currentTime - this.viewDuration * 0.2;
-            this.render();
-        } else if (playheadX < leftEdge && this.viewStart > 0) {
-            this.viewStart = Math.max(0, currentTime - this.viewDuration * 0.8);
-            this.render();
-        }
-    }
-
     clear() {
         this.notes = [];
         this.activeNotes.clear();
         this.viewStart = 0;
+        this.playheadTime = 0;
         this.render();
         this.playheadCtx.clearRect(0, 0, this.displayWidth, this.displayHeight);
     }
@@ -301,6 +296,7 @@ class PianoRoll {
         this.viewStart = Math.max(0, minTime - 500);
         this.viewDuration = Math.max(8000, maxTime - this.viewStart + 1000);
         this.render();
+        this.drawPlayhead(this.playheadTime || 0, { ensureVisible: true });
     }
 
     // Scroll to time
@@ -337,7 +333,9 @@ class PianoRoll {
 
         const onUp = (e) => {
             isDragging = false;
-            this.playheadCanvas.releasePointerCapture(e.pointerId);
+            if (this.playheadCanvas.hasPointerCapture(e.pointerId)) {
+                this.playheadCanvas.releasePointerCapture(e.pointerId);
+            }
         };
 
         this.playheadCanvas.addEventListener('pointerdown', onDown);
@@ -345,11 +343,31 @@ class PianoRoll {
         this.playheadCanvas.addEventListener('pointerup', onUp);
         // Also handle pointer cancel/leave as up to clear state
         this.playheadCanvas.addEventListener('pointercancel', onUp);
+        this.playheadCanvas.addEventListener('pointerleave', onUp);
     }
 
     xToTime(x) {
         const effectiveWidth = Math.max(1, this.noteAreaWidth);
         const ratio = (x - this.keyWidth) / effectiveWidth;
         return this.viewStart + ratio * this.viewDuration;
+    }
+
+    normalizeTime(timeMs) {
+        const t = Number(timeMs);
+        return Number.isFinite(t) && t >= 0 ? t : 0;
+    }
+
+    ensureTimeVisible(timeMs) {
+        const margin = this.viewDuration * 0.1;
+        const leftBound = this.viewStart + margin;
+        const rightBound = this.viewStart + this.viewDuration - margin;
+
+        if (timeMs < leftBound) {
+            this.viewStart = Math.max(0, timeMs - margin);
+            this.render();
+        } else if (timeMs > rightBound) {
+            this.viewStart = Math.max(0, timeMs - (this.viewDuration - margin));
+            this.render();
+        }
     }
 }
